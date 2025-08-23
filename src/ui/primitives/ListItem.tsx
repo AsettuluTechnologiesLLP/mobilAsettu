@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { font } from '../responsive';
-import { theme } from '../tokens/colors';
+import { colors } from '../tokens/colors';
 import { radii } from '../tokens/radii';
 import { cardShadow } from '../tokens/shadows';
 import { spacing } from '../tokens/spacing';
@@ -31,27 +31,27 @@ export default function ListItem({
     >
       <View style={styles.left}>
         {leftIcon ? (
-          <Icon name={leftIcon} size={20} color={theme.text} style={{ marginRight: spacing.sm }} />
+          <Icon name={leftIcon} size={20} color={colors.text} style={{ marginRight: spacing.sm }} />
         ) : null}
         <View>
           <Text variant="body" weight="semibold" style={{ fontSize: font(16) }}>
             {title}
           </Text>
           {subtitle ? (
-            <Text variant="caption" color={theme.textMuted} style={{ marginTop: 2 }}>
+            <Text variant="caption" color={colors.textMuted} style={{ marginTop: 2 }}>
               {subtitle}
             </Text>
           ) : null}
         </View>
       </View>
-      {rightChevron ? <Icon name="chevron-forward" size={18} color={theme.textMuted} /> : null}
+      {rightChevron ? <Icon name="chevron-forward" size={18} color={colors.textMuted} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.card,
+    backgroundColor: colors.card,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,

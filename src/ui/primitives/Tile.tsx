@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { theme } from '../tokens/colors';
+import { colors } from '../tokens/colors';
 import { radii } from '../tokens/radii';
 import { cardShadow } from '../tokens/shadows';
 import { spacing } from '../tokens/spacing';
@@ -24,6 +24,7 @@ export default function Tile({ icon, title, onPress, widthPercent = 31 }: Props)
         { width: `${widthPercent}%` },
         pressed && { opacity: 0.9 },
       ]}
+      accessibilityRole={onPress ? 'button' : undefined}
     >
       <Icon name={icon} size={22} />
       <Text variant="body" weight="semibold" style={{ marginTop: spacing.xs }}>
@@ -36,11 +37,11 @@ export default function Tile({ icon, title, onPress, widthPercent = 31 }: Props)
 const styles = StyleSheet.create({
   base: {
     borderWidth: 1,
-    borderColor: '#e6e6e6',
+    borderColor: colors.border,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
-    backgroundColor: theme.tile,
+    backgroundColor: colors.tile,
     alignItems: 'flex-start',
     ...cardShadow,
   },

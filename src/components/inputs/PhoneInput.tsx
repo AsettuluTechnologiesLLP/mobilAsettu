@@ -1,148 +1,179 @@
-import ErrorText from '@components/typography/ErrorText';
-import { COLORS, SIZES } from '@styles/theme';
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import { colors, fontSizes, radii, spacing, Text, vscale } from '@ui';
+import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
+  NativeSyntheticEvent,
   Platform,
   StyleSheet,
-  Text,
   TextInput,
-  TextStyle,
+  TextInputKeyPressEventData,
   View,
   ViewStyle,
 } from 'react-native';
 
-type PhoneInputProps = {
+type Props = {
   value: string;
-  onChangeText: (text: string) => void;
-  error?: string;
-  containerStyle?: ViewStyle;
-  codeTextStyle?: TextStyle;
-  inputStyle?: TextStyle;
+  onChangeText: (digits: string) => void;
+  error?: string | null;
+  placeholder?: string;
+  disabled?: boolean;
+  style?: ViewStyle | ViewStyle[];
+  testID?: string;
+  onValidityChange?: (valid: boolean) => void;
 };
 
-export type PhoneInputRef = {
-  focus: () => void;
-  blur: () => void;
-  clear: () => void;
-};
+const DIAL_CODE = '+91';
+const FLAG = '🇮🇳';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-// Roomy on small phones; avoid runway-wide on large screens
-// Slightly wider on Android so the placeholder never truncates
-const MAX_CONTAINER_WIDTH = Math.min(SCREEN_WIDTH * 0.9, Platform.OS === 'android' ? 380 : 280);
+const sanitizeDigits = (s: string) => s.replace(/\D+/g, '').slice(0, 10);
+const isValidIndianMobile = (digits: string) => /^\d{10}$/.test(digits) && /^[6-9]/.test(digits);
 
-// Small, consistent bump to all text in this control
-const FONT_SCALE = 1.12;
-// Fixed height reserved for error (prevents layout jump)
-const ERROR_SLOT_HEIGHT = 20;
+// Responsive letter spacing: smaller on compact screens to avoid overflow
+const DEVICE_WIDTH = Dimensions.get('window').width;
+const LETTER_SPACING = DEVICE_WIDTH < 360 ? 0.5 : DEVICE_WIDTH < 380 ? 0.9 : 1.2;
 
-const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
-  ({ value, onChangeText, error, containerStyle, codeTextStyle }, ref) => {
-    const inputRef = useRef<TextInput>(null);
+const PhoneInput = forwardRef<TextInput, Props>(function PhoneInput(
+  {
+    value,
+    onChangeText,
+    error,
+    placeholder = 'Phone number',
+    disabled = false,
+    style,
+    testID = 'phone-input',
+    onValidityChange,
+  },
+  ref,
+) {
+  const [focused, setFocused] = useState(false);
 
-    useImperativeHandle(ref, () => ({
-      focus: () => inputRef.current?.focus(),
-      blur: () => inputRef.current?.blur(),
-      clear: () => inputRef.current?.clear(),
-    }));
+  const internalError = useMemo(() => {
+    const v = sanitizeDigits(value);
+    if (v.length === 0) return null;
+    if (!/^[6-9]/.test(v)) return 'Number must start with 6–9';
+    if (v.length < 10) return 'Enter 10 digits';
+    return null;
+  }, [value]);
 
-    // Keep only digits in the input
-    const handleChange = (t: string) => {
-      const digits = t.replace(/\D+/g, '');
-      onChangeText(digits);
-    };
+  const showError = error ?? internalError;
+  const valid = isValidIndianMobile(sanitizeDigits(value));
 
-    return (
-      <>
-        <View style={[styles.inputContainer, containerStyle]}>
-          <View style={styles.countryCode}>
-            <Text style={styles.flag} accessibilityLabel="India flag">
-              🇮🇳
-            </Text>
-            <Text style={[styles.code, codeTextStyle]}>+91</Text>
-          </View>
+  useEffect(() => {
+    onValidityChange?.(valid);
+  }, [valid, onValidityChange]);
 
-          <TextInput
-            ref={inputRef}
-            style={[styles.input, { flex: 1, minWidth: 0 }]}
-            placeholder="Enter phone number"
-            placeholderTextColor={COLORS.iconUnSelected}
-            keyboardType={Platform.select({ ios: 'phone-pad', android: 'phone-pad' })}
-            inputMode="numeric"
-            textContentType="telephoneNumber"
-            autoComplete="tel"
-            maxLength={10} // India local number length
-            value={value}
-            onChangeText={handleChange}
-            editable
-            autoFocus={Platform.OS === 'ios'}
-            allowFontScaling
-            // Keep Android at 1.0 to avoid truncation, iOS a bit more generous
-            maxFontSizeMultiplier={Platform.OS === 'android' ? 1 : 1.2}
-          />
+  const borderColor = showError ? colors.error : focused ? colors.buttonBackground : colors.border;
+
+  const handleChange = (t: string) => onChangeText(sanitizeDigits(t));
+
+  const onKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    const k = e.nativeEvent.key;
+    if (!/^\d$/.test(k) && k !== 'Backspace') {
+      e.preventDefault?.();
+    }
+  };
+
+  return (
+    <View style={style} testID={testID} accessibilityLabel="Phone number input">
+      <View style={[styles.container, { borderColor, opacity: disabled ? 0.5 : 1 }]}>
+        {/* Fixed flag + dial code */}
+        <View style={styles.codeBox} pointerEvents="none">
+          <Text style={styles.flag}>{FLAG}</Text>
+          <Text weight="semibold" style={styles.code}>
+            {DIAL_CODE}
+          </Text>
         </View>
 
-        {/* Fixed-height error slot so layout never shifts */}
-        <View style={styles.errorSlot}>
-          {error ? <ErrorText message={error} /> : <Text style={styles.errorPlaceholder}>.</Text>}
-        </View>
-      </>
-    );
-  },
-);
+        {/* Single-line numeric input (no wrapping) */}
+        <TextInput
+          ref={ref}
+          value={value}
+          onChangeText={handleChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyPress={onKeyPress}
+          editable={!disabled}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textMuted}
+          keyboardType={Platform.OS === 'android' ? 'numeric' : 'number-pad'}
+          inputMode="numeric"
+          multiline={false} // ← force single line
+          maxLength={10}
+          returnKeyType="done"
+          selectionColor={colors.buttonBackground}
+          style={styles.input}
+          maxFontSizeMultiplier={1.1} // ← limit huge system scaling
+          accessibilityLabel="Enter 10 digit mobile number"
+        />
+      </View>
 
-const styles = StyleSheet.create({
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: SIZES.borderRadius,
-    paddingHorizontal: Math.round(SIZES.paddingSmall * 1.1),
-    backgroundColor: COLORS.background,
-    maxWidth: MAX_CONTAINER_WIDTH,
-    alignSelf: 'center',
-    height: Math.round(SIZES.buttonHeight * 1.06),
-    marginVertical: SIZES.marginSmall,
-    width: '100%', // important for Android placeholder & flexing
-  },
-  countryCode: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: Math.max(SIZES.marginSmall - 4, 4),
-  },
-  flag: {
-    fontSize: Math.round(SIZES.iconLarge * FONT_SCALE),
-    marginRight: SIZES.paddingSmall / 2,
-    marginLeft: SIZES.paddingSmall / 2,
-  },
-  code: {
-    fontSize: Math.round(SIZES.fontLarge * FONT_SCALE),
-    color: COLORS.text,
-    letterSpacing: 0.5,
-  },
-  input: {
-    height: '100%',
-    fontSize: Math.round(SIZES.fontLarge * FONT_SCALE),
-    color: COLORS.text,
-    letterSpacing: 0,
-    paddingHorizontal: SIZES.paddingSmall,
-  },
-  errorSlot: {
-    height: ERROR_SLOT_HEIGHT,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    maxWidth: MAX_CONTAINER_WIDTH,
-    width: '100%',
-    marginTop: SIZES.marginSmall,
-  },
-  errorPlaceholder: {
-    opacity: 0, // reserves space without showing text
-    includeFontPadding: false,
-    lineHeight: ERROR_SLOT_HEIGHT,
-  },
+      {/* Reserved error slot below (keeps layout stable) */}
+      <View style={styles.errorSlot}>
+        {showError ? (
+          <Text style={styles.errorText} accessibilityLiveRegion="polite">
+            {showError}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
 });
 
 export default PhoneInput;
+
+const HEIGHT = vscale(56);
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    minHeight: HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: radii.lg,
+    backgroundColor: colors.background,
+  },
+  codeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.md,
+    borderRightWidth: 1,
+    borderRightColor: colors.border,
+    borderTopLeftRadius: radii.lg,
+    borderBottomLeftRadius: radii.lg,
+    minHeight: HEIGHT,
+  },
+  flag: {
+    fontSize: 20,
+    marginRight: spacing.xs,
+  },
+  code: {
+    fontSize: fontSizes.lg,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  input: {
+    flex: 1,
+    minWidth: 0, // ← critical: allow shrinking in a row
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    fontSize: fontSizes.lg,
+    fontWeight: '600',
+    letterSpacing: LETTER_SPACING, // ← responsive letter-spacing
+    color: colors.textPrimary,
+    textAlignVertical: 'center', // Android vertical centering
+    includeFontPadding: false as any, // reduce extra top/bottom space on Android
+  },
+  errorSlot: {
+    height: vscale(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xs,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: fontSizes.sm,
+    textAlign: 'center',
+  },
+});

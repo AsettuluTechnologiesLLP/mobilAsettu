@@ -1,22 +1,27 @@
+// src/ui/primitives/Text.tsx
 import React from 'react';
-import { Text as RNText, TextProps as RNTextProps } from 'react-native';
+import { StyleProp, Text as RNText, TextProps as RNTextProps, TextStyle } from 'react-native';
 
-import { font } from '../responsive';
-import { theme } from '../tokens/colors';
+import { colors } from '../tokens/colors';
 import { type, weight } from '../tokens/typography';
 
-type Variant = 'title' | 'subtitle' | 'body' | 'caption';
+type Variant = keyof typeof type;
 
 type Props = RNTextProps & {
   variant?: Variant;
   color?: string;
   weight?: keyof typeof weight;
+  align?: 'left' | 'center' | 'right';
+  style?: StyleProp<TextStyle>;
 };
+
+const font = (v: number | string) => (typeof v === 'number' ? v : parseInt(String(v), 10));
 
 export default function Text({
   variant = 'body',
-  color = theme.text,
+  color = colors.text,
   weight: w = 'regular',
+  align,
   style,
   children,
   ...rest
@@ -24,7 +29,15 @@ export default function Text({
   return (
     <RNText
       {...rest}
-      style={[{ color, fontSize: font(type[variant]) as number, fontWeight: weight[w] }, style]}
+      style={[
+        {
+          color,
+          fontSize: font(type[variant]) as number,
+          fontWeight: weight[w],
+          ...(align ? { textAlign: align } : null),
+        },
+        style,
+      ]}
     >
       {children}
     </RNText>

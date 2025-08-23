@@ -1,13 +1,10 @@
+// src/screens/Auth/OTPVerificationScreen.tsx
 import { Logos } from '@assets/image';
-import PrimaryButton from '@components/buttons/PrimaryButton';
-import OTPInput from '@components/inputs/OTPInput';
-import ErrorText from '@components/typography/ErrorText';
-import authStyles from '@styles/authStyles';
-import { Screen } from '@ui';
-import otpStyles from '@ui/primitives/otp';
+import { Button, colors, OTPInput, otpStyles, Screen, spacing, Text, vscale } from '@ui';
+import type { OTPInputRef } from '@ui/primitives/OTPInput';
 import logger from '@utils/logger';
 import React, { useEffect } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, TouchableOpacity, View } from 'react-native';
 
 import { useOtpLogic } from './hooks/useOtpLogic';
 
@@ -37,50 +34,79 @@ export default function OTPVerificationScreen({ route }: Props) {
   }, []);
 
   return (
-    <Screen>
+    <Screen bg={colors.background} padded>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={authStyles.loginScreenContainer}
+        style={{ flex: 1 }}
       >
-        <Image
-          source={Logos.wordmarkBlack}
-          style={[authStyles.authScreenLogo, otpStyles.logo]}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-        />
-
-        <Text style={otpStyles.message}>
-          Enter OTP sent to {countryCode} {phoneNumber}
-        </Text>
-
-        <OTPInput ref={otpInputRef} value={otp} onChangeText={setOtp} />
-
-        {/* Fixed-height error slot so nothing shifts */}
-        <View style={otpStyles.errorSlot}>
-          {error ? (
-            <ErrorText message={error} />
-          ) : (
-            <Text style={otpStyles.errorPlaceholder}>.</Text>
-          )}
+        {/* Logo 20% below the top — same as Login */}
+        <View style={{ marginTop: '25%', alignItems: 'center' }}>
+          <Image
+            source={Logos.wordmarkBlack}
+            style={{ height: vscale(48) }}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            accessibilityLabel="Asettu"
+          />
         </View>
 
-        {/* Fixed-height slot for timer / resend so layout stays stable */}
-        <View style={otpStyles.resendSlot}>
-          {timer > 0 ? (
-            <Text style={otpStyles.timer}>Resend OTP in {timer}s</Text>
-          ) : (
-            <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
-              <Text style={otpStyles.resend}>Resend OTP</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        {/* Centered content column at 80% width */}
+        <View style={{ width: '80%', alignSelf: 'center' }}>
+          {/* Maintain the same gap from logo to OTP boxes as Login: spacing.xl */}
+          <View style={{ marginTop: spacing.xl }}>
+            {/* Instruction (small gap above OTP boxes) */}
+            <Text
+              style={{
+                textAlign: 'center',
+                color: colors.text,
+                marginBottom: spacing.sm,
+                marginTop: '7%',
+              }}
+              allowFontScaling
+              maxFontSizeMultiplier={1.2}
+            >
+              Enter OTP sent to {countryCode} {phoneNumber}
+            </Text>
 
-        <PrimaryButton
-          title="Login"
-          onPress={handleVerifyOtp}
-          loading={loading}
-          disabled={!isOtpFilled || loading}
-        />
+            {/* OTP boxes */}
+            <OTPInput
+              ref={otpInputRef as React.RefObject<OTPInputRef>}
+              value={otp}
+              onChangeText={setOtp}
+            />
+
+            {/* Fixed-height error slot (prevents layout jump) */}
+            <View style={[otpStyles.errorSlot, { marginTop: spacing.xs }]}>
+              {error ? (
+                <Text style={{ color: colors.error, textAlign: 'center' }}>{error}</Text>
+              ) : (
+                <Text style={otpStyles.errorPlaceholder}>.</Text>
+              )}
+            </View>
+
+            {/* Fixed-height resend/timer slot (small gap) */}
+            <View style={[otpStyles.resendSlot, { marginTop: spacing.sm }]}>
+              {timer > 0 ? (
+                <Text style={otpStyles.timer}>Resend OTP in {timer}s</Text>
+              ) : (
+                <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
+                  <Text style={otpStyles.resend}>Resend OTP</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Maintain the same gap from field to button as Login: spacing.lg */}
+            <View style={{ marginTop: spacing.lg }}>
+              <Button
+                title="Login"
+                onPress={handleVerifyOtp}
+                loading={loading}
+                disabled={!isOtpFilled || loading}
+                style={{ width: '100%' }} // matches OTP width (80% of screen via parent)
+              />
+            </View>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </Screen>
   );

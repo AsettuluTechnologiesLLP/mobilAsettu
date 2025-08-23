@@ -1,47 +1,35 @@
 // src/services/api.ts
+import ERROR_MESSAGES from '@constants/errors'; // use path alias
 import NetInfo from '@react-native-community/netinfo';
+import logger from '@utils/logger';
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, Method } from 'axios';
 
-import ERROR_MESSAGES from '../constants/errors';
-import logger from '../utils/logger';
-
-/** Set this to your base API; you already had this */
-const API_URL = 'http://192.168.1.7:8080/api';
+/** Base config */
+const API_URL = 'http://192.168.1.6:8080/api';
 const TIMEOUT_DURATION = 10_000;
 
-/** All requests default to JSON */
-const http: AxiosInstance = axios.create({
+/** Axios instance */
+export const http: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: TIMEOUT_DURATION,
   headers: { 'Content-Type': 'application/json' },
 });
 
-/** Endpoints that must NOT send Authorization and must NOT trigger refresh flow */
+/** Endpoints that do not require Authorization or refresh */
 const AUTH_WHITELIST = ['/auth/sendotp', '/auth/verifyotp', '/auth/refreshtoken'];
-
-/** Helper to check if an endpoint should skip auth/refresh */
-function isWhitelisted(url?: string): boolean {
-  if (!url) return false;
-  // url is usually relative (e.g. '/user/getprofile')
-  // In case someone passes absolute, strip base
-  const path = url.startsWith('http') ? url.replace(API_URL, '') : url;
-  return AUTH_WHITELIST.some((p) => path.startsWith(p));
-}
-
-/** Backends typically expect 'Bearer <token>' */
 const USE_BEARER = true;
 
-/** Module-local token storage (kept in memory) */
+/** In-memory auth */
 let _accessToken: string | null = null;
 let _refreshToken: string | null = null;
 
-/** Expose a way for the app to react (e.g., logout) when refresh fails */
+/** Global handler for terminal auth failures (e.g., logout) */
 let _onUnauthorized: (() => void) | null = null;
 export function setUnauthorizedHandler(fn: (() => void) | null) {
   _onUnauthorized = fn;
 }
 
-/** Set/clear tokens globally */
+/** Manage tokens */
 export function setAuthTokens(
   tokens: { accessToken: string; refreshToken?: string | null } | null,
 ) {
@@ -57,31 +45,67 @@ export function setAuthTokens(
   }
 }
 
-/** Exported helpers if you need to peek (rare) */
 export const getAccessToken = () => _accessToken;
 export const getRefreshToken = () => _refreshToken;
 
+/** Helpers */
+function isWhitelisted(url?: string): boolean {
+  if (!url) return false;
+  const path = url.startsWith('http') ? url.replace(API_URL, '') : url;
+  return AUTH_WHITELIST.some((p) => path.startsWith(p));
+}
+
+/** Central error parser: always derive a user-friendly message */
+export function getApiErrorMessage(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const ax = err as AxiosError<any>;
+
+    // No HTTP response => network/timeout
+    if (!ax.response) {
+      if (ax.code === 'ECONNABORTED') return 'Request timed out. Please try again.';
+      return ERROR_MESSAGES.UNKNOWN_ERROR || 'Network error. Please check your connection.';
+    }
+
+    const data = ax.response.data;
+
+    // Prefer server-provided fields
+    if (data) {
+      if (typeof data === 'string') return data;
+      if (typeof data.error === 'string') return data.error; // { error: "Invalid OTP" }
+      if (typeof data.message === 'string') return data.message; // { message: "..." }
+
+      // Common validation shape: { errors: { field: ["msg"] } }
+      if (data.errors && typeof data.errors === 'object') {
+        const first = Object.values(data.errors)[0];
+        if (Array.isArray(first) && first.length) return String(first[0]);
+      }
+    }
+
+    // Fallback with status code
+    return `Request failed (${ax.response.status})`;
+  }
+
+  // Non-Axios thrown error
+  return (err as any)?.message ?? 'Something went wrong';
+}
+
 /* ─────────────────────────────────────────────────────────────
  * Request interceptor:
- *  - Ensure Authorization header for non-auth endpoints
- *  - Keep Content-Type as JSON (already default)
+ *  - Connectivity check
+ *  - Attach Authorization (unless whitelisted)
  * ────────────────────────────────────────────────────────────*/
 http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  // Always check connectivity early
   const net = await NetInfo.fetch();
   if (net.isInternetReachable === false || net.isConnected === false) {
-    // Throwing here routes to the response interceptor catch
+    // Throwing routes to response interceptor catch
     throw new Error(ERROR_MESSAGES.NO_INTERNET);
   }
 
-  // Skip auth for whitelisted endpoints
   if (isWhitelisted(config.url)) {
-    // Ensure we don't accidentally send old auth headers
     if (config.headers) delete (config.headers as any).Authorization;
     return config;
   }
 
-  // Attach Authorization if we have it
   if (_accessToken) {
     (config.headers as any).Authorization = USE_BEARER ? `Bearer ${_accessToken}` : _accessToken;
   }
@@ -90,7 +114,9 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 });
 
 /* ─────────────────────────────────────────────────────────────
- * Response interceptor with refresh-on-401 and retry-once
+ * Response interceptor:
+ *  - Unified error mapping (including WHITELISTED endpoints)
+ *  - Refresh-on-401 with queueing + single-flight
  * ────────────────────────────────────────────────────────────*/
 let isRefreshing = false;
 let pendingQueue: Array<(token: string) => void> = [];
@@ -98,7 +124,6 @@ let pendingQueue: Array<(token: string) => void> = [];
 function subscribeTokenRefresh(cb: (token: string) => void) {
   pendingQueue.push(cb);
 }
-
 function onRefreshed(newToken: string) {
   pendingQueue.forEach((cb) => cb(newToken));
   pendingQueue = [];
@@ -107,36 +132,45 @@ function onRefreshed(newToken: string) {
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const ax = error as AxiosError;
-    const original = ax.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // Handle our explicit offline error thrown from request interceptor
-    if (error?.message === ERROR_MESSAGES.NO_INTERNET) {
+    // Map our explicit offline error
+    if ((error as any)?.message === ERROR_MESSAGES.NO_INTERNET) {
       return Promise.reject(new Error(ERROR_MESSAGES.NO_INTERNET));
     }
 
-    // If no response, treat as network error
+    const ax = error as AxiosError;
+    const original = (ax.config ?? undefined) as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+
+    // If no response at all, return unified message
     if (!ax.response) {
-      return Promise.reject(new Error(ERROR_MESSAGES.UNKNOWN_ERROR));
+      return Promise.reject(new Error(getApiErrorMessage(ax)));
     }
 
     const status = ax.response.status;
 
-    // Do not attempt refresh for whitelisted endpoints (including refresh itself)
-    if (isWhitelisted(original?.url)) {
-      return Promise.reject(ax);
+    // For whitelisted endpoints, DO NOT refresh; still map message properly
+    const originalUrl = original?.url;
+    if (isWhitelisted(originalUrl)) {
+      const msg = getApiErrorMessage(ax);
+      return Promise.reject(new Error(msg));
     }
 
-    // Attempt refresh on 401 once
+    // Refresh on 401 once if we have a refresh token
     if (status === 401 && !original?._retry && _refreshToken) {
-      original._retry = true;
+      if (original) original._retry = true;
 
       if (isRefreshing) {
-        // Queue until refresh completes
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           subscribeTokenRefresh((token: string) => {
-            // retry with new token
-            (original.headers as any).Authorization = USE_BEARER ? `Bearer ${token}` : token;
+            if (!original) {
+              // No original request to retry — surface original error message
+              reject(new Error(getApiErrorMessage(ax)));
+              return;
+            }
+            if (original.headers) {
+              (original.headers as any).Authorization = USE_BEARER ? `Bearer ${token}` : token;
+            }
             resolve(http(original));
           });
         });
@@ -144,7 +178,6 @@ http.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        // Call refresh endpoint directly via the instance (it's whitelisted)
         const res = await http.request<RefreshResponse>({
           url: '/auth/refreshtoken',
           method: 'POST',
@@ -153,57 +186,52 @@ http.interceptors.response.use(
 
         const newAccess = res.data?.data?.accessToken;
         const newRefresh = res.data?.data?.refreshToken ?? _refreshToken;
-
         if (!newAccess) throw new Error('No access token in refresh');
 
-        // Update tokens in memory + default header
         setAuthTokens({ accessToken: newAccess, refreshToken: newRefresh });
 
-        // Flush queued requests
         onRefreshed(newAccess);
         isRefreshing = false;
 
-        // Retry the original request with the new token
-        (original.headers as any).Authorization = USE_BEARER ? `Bearer ${newAccess}` : newAccess;
+        if (!original) {
+          // Nothing to retry; just resolve with a benign error/message
+          return Promise.reject(new Error('Original request missing'));
+        }
+        if (original.headers) {
+          (original.headers as any).Authorization = USE_BEARER ? `Bearer ${newAccess}` : newAccess;
+        }
         return http(original);
       } catch (e) {
         isRefreshing = false;
-        pendingQueue = []; // drop queued requests
-        // Clear tokens; let the app logout if it wants
+        pendingQueue = [];
         setAuthTokens(null);
-        if (_onUnauthorized) _onUnauthorized();
-        return Promise.reject(e);
+        _onUnauthorized?.();
+        return Promise.reject(new Error(getApiErrorMessage(e)));
       }
     }
 
-    // For non-401 errors (or 401 with no refresh token), pass back a clean Error
-    const msg =
-      (ax.response.data as any)?.message ||
-      (ax.response.data as any)?.error ||
-      ERROR_MESSAGES.SERVER_ERROR;
-
-    return Promise.reject(new Error(msg));
+    // All other errors: unified message
+    return Promise.reject(new Error(getApiErrorMessage(ax)));
   },
 );
 
 /* ─────────────────────────────────────────────────────────────
- * Master API CALL function
+ * Core API call utility (typed)
  * ────────────────────────────────────────────────────────────*/
-async function apiCall<T>(
+export async function apiCall<T>(
   endpoint: string,
   method: Method,
   data?: Record<string, any>,
 ): Promise<T> {
   const start = Date.now();
-
   logger.debug(`[API] → ${method} ${endpoint}`);
-  if (data !== undefined) logger.debug(`[API] payload`, data);
+  if (data !== undefined) logger.debug('[API] payload', data);
 
   try {
     const res = await http.request<T>({ url: endpoint, method, data });
     const ms = Date.now() - start;
     logger.debug(`[API] ← ${res.status} ${method} ${endpoint} (${ms} ms)`);
-    logger.info(`[API] body`, res.data);
+    logger.info('[API] body', res.data);
     return res.data;
   } catch (err: any) {
     const ms = Date.now() - start;
@@ -213,7 +241,7 @@ async function apiCall<T>(
 }
 
 /* ─────────────────────────────────────────────────────────────
- * Types & API functions (your existing ones + getProfile)
+ * Types & high-level API functions
  * ────────────────────────────────────────────────────────────*/
 export type SendOtpResponse = { success: boolean; error?: string };
 
@@ -230,6 +258,7 @@ export type RefreshResponse = {
   data: { accessToken: string; refreshToken?: string; sessionId?: string };
 };
 
+/** Auth */
 export const getOtp = async (countryCode: string, phone: string) =>
   apiCall<SendOtpResponse>('/auth/sendotp', 'POST', { countryCode, phone });
 
@@ -242,7 +271,7 @@ export const verifyOtp = async (countryCode: string, phone: string, otpCode: str
 export const refreshAccess = (refreshToken: string) =>
   apiCall<RefreshResponse>('/auth/refreshtoken', 'POST', { refreshToken });
 
-/* ---------- Profile ---------- */
+/** Profile */
 export type GetProfileResponse = {
   success: boolean;
   message?: string;
@@ -263,18 +292,15 @@ export type GetProfileResponse = {
 
 export const getProfile = () => apiCall<GetProfileResponse>('/user/getprofile', 'GET');
 
-// ---- Update Profile ----
 export type UpdateProfilePayload = {
   fullName?: string;
-  dateOfBirth?: string; // DD-MM-YYYY (e.g., "25-08-2010")
+  dateOfBirth?: string; // DD-MM-YYYY
   gender?: 'male' | 'female';
-  preferredLanguage?: string; // e.g., "en"
-
-  // Plan for near-future backend changes (send only if your backend accepts them):
+  preferredLanguage?: string;
   phoneNumber?: string;
   phoneCountryCode?: string; // e.g., "+91"
-  avatarKey?: string; // curated avatar id like "a03"
-  // profilePicture?: string;          // (not used now, but supported by backend if you ever need)
+  avatarKey?: string;
+  // profilePicture?: string;
 };
 
 export type UpdateProfileResponse = {

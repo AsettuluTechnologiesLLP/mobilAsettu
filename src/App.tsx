@@ -1,12 +1,14 @@
+import RootNavigator from '@navigation/RootNavigator';
 import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider } from '@screens/Auth/hooks/useAuth';
+import { ProfileProvider } from '@screens/Profile/hooks/useProfile';
+import logger from '@utils/logger';
 import React, { useEffect } from 'react';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import RootNavigator from './navigation/RootNavigator';
-import { AuthProvider } from './screens/Auth/hooks/useAuth';
-import { ProfileProvider } from './screens/Profile/hooks/useProfile';
-import logger from './utils/logger';
+Ionicons.loadFont();
 
 LogBox.ignoreAllLogs();
 

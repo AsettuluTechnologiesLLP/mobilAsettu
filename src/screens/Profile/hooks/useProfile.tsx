@@ -57,6 +57,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const didInitialAuthFetchRef = useRef(false);
 
   useEffect(() => {
+    logger.debug('[useProfile] EFFECT-0 Mounted');
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -64,12 +65,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const cached = JSON.parse(raw) as { profile: Profile; lastFetched: number };
           setProfile(cached.profile);
           setLastFetched(cached.lastFetched);
-          logger.debug('[Profile] cache loaded');
+          logger.debug('[useProfile] cache loaded');
         }
       } catch (e: any) {
-        logger.warn('[Profile] cache load failed', e?.message);
+        logger.warn('[useProfile] cache load failed', e?.message);
       }
     })();
+    return () => logger.debug('[useProfile] EFFECT-0 Unmounted');
   }, []);
 
   const persist = useCallback(async (p: Profile, fetchedAt: number) => {
@@ -166,6 +168,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   useEffect(() => {
+    logger.debug('[useProfile] EFFECT-1 Auth status changed :', status);
     if (status === 'authenticated') {
       if (didInitialAuthFetchRef.current) return;
       didInitialAuthFetchRef.current = true;
@@ -174,6 +177,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       didInitialAuthFetchRef.current = false;
       clear().catch(() => {});
     }
+    return () => logger.debug('[useProfile] EFFECT-1 Unmounted');
   }, [status, refresh, clear]);
 
   const value = useMemo<ProfileContextValue>(

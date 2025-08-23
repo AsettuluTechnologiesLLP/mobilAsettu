@@ -1,4 +1,5 @@
-import { vscale } from '@ui/responsive';
+// src/ui/tokens/auth.ts
+import { vscale } from '@/ui/responsive'; // ensure this path exists
 
 // Fixed heights so layout never jumps
 export const OTP_ERROR_SLOT_HEIGHT = vscale(20);

@@ -62,11 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // When API-layer refresh fails, auto-logout cleanly
   useEffect(() => {
+    logger.debug('[useAuth] EFFECT-0 >>>>>> Mounted');
     setUnauthorizedHandler(() => {
       logger.warn('[useAuth] onUnauthorized → logout()');
       logout();
     });
-    return () => setUnauthorizedHandler(null);
+    return () => {
+      setUnauthorizedHandler(null);
+      logger.debug('[useAuth] EFFECT-0 <<<<<< Unmounted');
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -152,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // --- initial auth check on mount ---
   useEffect(() => {
-    logger.debug('[useAuth] initial check (with splash delay)', {
+    logger.debug('[useAuth] EFFECT-1 >>>>>> Mounted : With SplashDelay ', {
       splashMs: APP_CONFIG.SPLASH_DELAY_MS,
     });
 
@@ -211,6 +215,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStatus('unauthenticated');
       }
     })();
+    return () => {
+      setUnauthorizedHandler(null);
+      logger.debug('[useAuth] EFFECT-1 <<<<<< Unmounted');
+    };
   }, []);
 
   // value memo depends on the stable callbacks + status

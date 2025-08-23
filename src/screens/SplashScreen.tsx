@@ -1,14 +1,14 @@
 // src/screens/SplashScreen.tsx
 import { Logos } from '@assets/image';
-import { byShortestSide, Screen, theme } from '@ui';
+import { colors, Screen, splashLogoSize } from '@ui';
 import React from 'react';
 import { Image, View } from 'react-native';
 
-const ICON_SIZE = byShortestSide(0.6, { min: 140, max: 320 });
+const ICON_SIZE = splashLogoSize();
 
 export default function SplashScreen() {
   return (
-    <Screen bg={theme.splashBg}>
+    <Screen bg={colors.splashBackground}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Image
           source={Logos.iconWhite}

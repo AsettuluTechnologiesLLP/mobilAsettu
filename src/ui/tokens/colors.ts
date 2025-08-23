@@ -1,36 +1,69 @@
 // src/ui/tokens/colors.ts
 export const palette = {
+  // Neutrals
   white: '#FFFFFF',
   black: '#000000',
-  gray100: '#F5F5F5',
+  gray50: '#FAFAFA',
   gray200: '#E5E7EB',
   gray300: '#D1D5DB',
   gray500: '#6B7280',
   gray700: '#374151',
   gray900: '#111827',
+
+  // Brand
+  brandBlack: '#000000',
   primary: '#111827',
   primaryAlt: '#1F2937',
-  accent: '#2563EB',
-  success: '#16A34A',
-  warning: '#D97706',
-  error: '#DC2626',
-  brandBlack: '#000000',
-};
+  secondary: '#4B5563',
+  secondaryAlt: '#9CA3AF',
 
-export const theme = {
-  bg: palette.white,
-  text: palette.gray900,
+  // Action (kept for legacy; not used for primary button anymore)
+  blue600: '#2563EB',
+
+  // States
+  green600: '#16A34A',
+  amber600: '#D97706',
+  red600: '#DC2626',
+} as const;
+
+export const colors = {
+  // Splash
+  splashBackground: palette.brandBlack,
+  // alias for places using splashBg earlier
+  splashBg: palette.brandBlack,
+
+  // Base
+  background: palette.white,
+  textPrimary: palette.gray900,
+  textSecondary: palette.gray700,
   textMuted: palette.gray500,
   border: palette.gray200,
+
+  // Semantic primaries
   primary: palette.primary,
   primaryAlt: palette.primaryAlt,
   primaryTextOn: palette.white,
+
+  // Surfaces
   card: palette.white,
   tile: palette.white,
-  error: palette.error,
-  success: palette.success,
-  accent: palette.accent,
-  splashBg: palette.brandBlack,
-};
 
-export type Theme = typeof theme;
+  // States
+  error: palette.red600,
+  success: palette.green600,
+
+  // Monochrome CTA
+  buttonBackground: palette.black, // ← was blue; now black
+  buttonTextOn: palette.white, // label color for primary
+
+  // Minimal accent (kept for back-compat; set to black to stay mono)
+  accent: palette.black,
+
+  // Convenience alias (kept)
+  text: palette.gray900,
+
+  // Focus/selection/ripple (for inputs/buttons; removes blue focus)
+  focus: palette.gray900,
+  selection: palette.gray900,
+  ripple: palette.gray200,
+} as const;

@@ -1,10 +1,12 @@
 {
   "extends": "@react-native/typescript-config",
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods"],
   "compilerOptions": {
-    "baseUrl": "src",
+    "jsx": "react-native",
+    "strict": true,
+    "noEmit": true,
+    "baseUrl": "./src",
     "paths": {
+      "@/*": ["*"],
       "@ui": ["ui/index"],
       "@ui/*": ["ui/*"],
       "@assets/*": ["assets/*"],
@@ -16,8 +18,9 @@
       "@constants/*": ["constants/*"],
       "@styles/*": ["styles/*"],
       "@config/*": ["config/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@/*": ["*"]
+      "@hooks/*": ["hooks/*"]      // ← fixed (no extra "src/")
     }
-  }
+  },
+  "include": ["src/**/*", "App.tsx"],  // ← explicit scope so VSCode indexes your code
+  "exclude": ["node_modules", "ios", "android", "dist", "build", "Pods"]
 }

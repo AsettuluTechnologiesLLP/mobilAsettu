@@ -1,15 +1,11 @@
 // src/ui/index.ts
-export { default as Button } from './primitives/Button';
-export { default as Icon } from './primitives/Icon';
-export { default as ListItem } from './primitives/ListItem';
-export { default as Screen } from './primitives/Screen';
-export { default as Text } from './primitives/Text';
-export { default as Tile } from './primitives/Tile';
-export { palette, theme } from './tokens/colors';
-export * from './tokens/radii';
-export * from './tokens/shadows';
-export * from './tokens/spacing';
-export * from './tokens/typography';
+// One-stop import surface for UI: primitives, tokens, and responsive helpers.
 
-// Re-export responsive helpers so you can do: import { byShortestSide } from '@ui'
+// Design tokens & theme types (colors, spacing, radii, shadows, typography, misc)
+export * from './tokens';
+
+// Low-level UI building blocks (Button, Text, Screen, Icon, ListItem, Tile, and style sheets)
+export * from './primitives';
+
+// Responsive utilities (scale, vscale, mscale, font, byShortestSide, splashLogoSize, etc.)
 export * from './responsive';
