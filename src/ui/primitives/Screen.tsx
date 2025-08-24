@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   padded: {
-    padding: spacing.xl,
+    padding: spacing.lg,
   },
   center: {
     alignItems: 'center',

@@ -1,5 +1,4 @@
 import { AvatarKey } from '@assets/avatars';
-// import { ProfileHeader, ProfileRow } from '@components/profile';
 import { ProfileHeader } from '@components/profile/ProfileHeader';
 import ProfileRow from '@components/profile/ProfileRow';
 import ROUTES from '@navigation/routes';
@@ -9,7 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '@screens/Auth/hooks/useAuth';
 import { useProfile } from '@screens/Profile/hooks/useProfile';
 import { Screen } from '@ui';
-import styles from '@ui/primitives/profile';
+import { spacing } from '@ui/tokens';
 import logger from '@utils/logger';
 import React, { useEffect } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
@@ -42,33 +41,33 @@ export default function ProfileScreen() {
   const onLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-        },
-      },
+      { text: 'Logout', style: 'destructive', onPress: async () => logout() },
     ]);
   };
 
   return (
-    <Screen>
+    // Match Home/Asets pattern: no default padding, only top safe area
+    <Screen padded={false} edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.container}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never" // avoid double top inset
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.md,
+          paddingBottom: spacing.lg,
+          flexGrow: 1,
+        }}
       >
         <ProfileHeader
           name={name}
           phone={phoneDisplay}
           onEdit={onEditProfile}
-          initial={name?.[0]}
+          initial={(name?.[0] as string) || 'U'}
           avatarKey={profile?.avatarKey as AvatarKey | undefined}
         />
 
-        <View style={styles.sectionSpacer} />
+        {/* Section spacer (tokens only) */}
+        <View style={{ height: spacing.md }} />
 
         <ProfileRow
           icon="home-outline"

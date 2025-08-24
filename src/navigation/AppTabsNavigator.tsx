@@ -1,10 +1,14 @@
 // src/navigation/AppTabsNavigator.tsx
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabNavigationOptions,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
+import { colors } from '@ui/tokens';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import ROUTES from './routes'; // adjust path if routes is elsewhere
-import AssetsStackNavigator from './stacks/AssetsStack';
+import ROUTES from './routes';
+import AssetsStackNavigator from './stacks/AsettsStack';
 import HomeStackNavigator from './stacks/HomeStack';
 import ProfileStackNavigator from './stacks/ProfileStack';
 import ServicesStackNavigator from './stacks/ServicesStack';
@@ -18,7 +22,6 @@ export type AppTabParamList = {
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-// ---- Hoisted helpers (no nested components in render) ----
 function getIconName(routeName: keyof AppTabParamList, focused: boolean) {
   switch (routeName) {
     case ROUTES.HOME_TAB:
@@ -42,24 +45,23 @@ type TabBarIconProps = {
 };
 
 function TabBarIcon({ routeName, focused, color, size }: TabBarIconProps) {
-  const name = getIconName(routeName, focused);
-  return <Ionicons name={name} size={size} color={color} />;
+  return <Ionicons name={getIconName(routeName, focused)} size={size} color={color} />;
 }
 
-// ---- Component ----
-export default function AppAppTabsNavigator() {
+// ✅ Hoisted: not created inside a React component
+const tabScreenOptions = ({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
+  headerShown: false,
+  tabBarShowLabel: true,
+  tabBarActiveTintColor: colors.textPrimary,
+  tabBarInactiveTintColor: colors.textMuted,
+  tabBarIcon: (props) => <TabBarIcon routeName={route.name as keyof AppTabParamList} {...props} />,
+  tabBarAllowFontScaling: false,
+  tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+});
+
+export default function AppTabsNavigator() {
   return (
-    <Tab.Navigator
-      initialRouteName={ROUTES.HOME_TAB}
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: true,
-        // eslint-disable-next-line react/no-unstable-nested-components
-        tabBarIcon: (props) => (
-          <TabBarIcon routeName={route.name as keyof AppTabParamList} {...props} />
-        ),
-      })}
-    >
+    <Tab.Navigator initialRouteName={ROUTES.HOME_TAB} screenOptions={tabScreenOptions}>
       <Tab.Screen
         name={ROUTES.HOME_TAB}
         component={HomeStackNavigator}

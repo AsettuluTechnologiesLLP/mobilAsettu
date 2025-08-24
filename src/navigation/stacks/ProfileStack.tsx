@@ -1,13 +1,19 @@
+// src/navigation/stacks/ProfileStack.tsx
 import ROUTES from '@navigation/routes';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
 import AboutAsettuScreen from '@screens/Profile/AboutAsettuScreen';
 import EditProfileScreen from '@screens/Profile/EditProfileScreen';
-import ManageAssetsScreen from '@screens/Profile/ManageAssetsScreen';
-import ManageHouseholdsScreen from '@screens/Profile/ManageHouseholdsScreen';
-import ManageMembersScreen from '@screens/Profile/ManageMembersScreen';
-import ManageServiceRequestsScreen from '@screens/Profile/ManageServiceRequestsScreen';
 import ProfileScreen from '@screens/Profile/ProfileScreen';
+import { colors } from '@ui/tokens';
 import React from 'react';
+
+import ManageAssetsScreen from '@/screens/Asetts/ManageAssetsScreen';
+import ManageMembersScreen from '@/screens/Households/ManageHouseholdMembersScreen';
+import ManageHouseholdsScreen from '@/screens/Households/ManageHouseholdsScreen';
+import ManageServiceRequestsScreen from '@/screens/Services/ManageServiceRequestsScreen';
 
 export type ProfileStackParamList = {
   [ROUTES.PROFILE]: undefined;
@@ -21,17 +27,28 @@ export type ProfileStackParamList = {
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
+// one place for header visuals + background
+const commonHeader: NativeStackNavigationOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: colors.background },
+  headerTitleStyle: { color: colors.textPrimary },
+  headerTintColor: colors.textPrimary,
+  headerShadowVisible: true,
+  //headerBackTitleVisible: false, // tidy iOS back title
+  contentStyle: { backgroundColor: colors.background }, // avoid white flashes
+};
+
 export default function ProfileStackNavigator() {
   return (
-    <Stack.Navigator>
-      {/* Root (no header; tab bar stays visible) */}
+    <Stack.Navigator screenOptions={commonHeader}>
+      {/* Root in the tab: no header */}
       <Stack.Screen
         name={ROUTES.PROFILE}
         component={ProfileScreen}
         options={{ headerShown: false }}
       />
 
-      {/* Children (show header so user can go back) */}
+      {/* Children inherit the common header; only set titles */}
       <Stack.Screen
         name={ROUTES.EDIT_PROFILE}
         component={EditProfileScreen}
@@ -45,22 +62,22 @@ export default function ProfileStackNavigator() {
       <Stack.Screen
         name={ROUTES.MANAGE_HOUSEHOLDS}
         component={ManageHouseholdsScreen}
-        options={{ title: 'Manage households' }}
+        options={{ title: 'My Households' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_MEMBERS}
         component={ManageMembersScreen}
-        options={{ title: 'Manage members' }}
+        options={{ title: 'My Members' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_ASSETS}
         component={ManageAssetsScreen}
-        options={{ title: 'Manage assets' }}
+        options={{ title: 'My Assets' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_SERVICE_REQUESTS}
         component={ManageServiceRequestsScreen}
-        options={{ title: 'Service requests' }}
+        options={{ title: 'My Service Requests' }}
       />
     </Stack.Navigator>
   );

@@ -1,8 +1,8 @@
 // src/navigation/stacks/HomeStack.tsx
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '@screens/Home/HomeScreen';
 import React from 'react';
 
-import HomeScreen from '../../screens/Home/HomeScreen';
 import ROUTES from '../routes';
 
 export type HomeStackParamList = { [ROUTES.HOME]: undefined };

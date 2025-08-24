@@ -28,10 +28,10 @@ export default function ServicesScreen() {
             color={colors.textPrimary}
             style={{ fontSize: fontSizes.xl, marginBottom: spacing.sm }}
           >
-            Services
+            Asetts
           </Text>
 
-          <Text>A clean placeholder screen. Build your services screen components here later.</Text>
+          <Text>A clean placeholder screen. Build your Asetts screen components here later.</Text>
         </View>
       </ScrollView>
     </Screen>

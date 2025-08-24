@@ -15,10 +15,17 @@ export const fontSizes = {
   '2xl': 26,
 } as const;
 
+// global paragraph ratio (can tune later)
+const LH = 1.4;
+const px = (size: number, ratio = LH) => Math.round(size * ratio);
+
 export const lineHeights = {
-  tight: 1.2,
-  normal: 1.35,
-  relaxed: 1.5,
+  xs: px(fontSizes.xs),
+  sm: px(fontSizes.sm),
+  md: px(fontSizes.md),
+  lg: px(fontSizes.lg),
+  xl: px(fontSizes.xl),
+  // '2xl': px(fontSizes['2xl']),
 } as const;
 
 export const type = {

@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ServicesScreen from '@screens/Services/ServicesScreen';
 import React from 'react';
 
-import ServicesScreen from '../../screens/Services/ServicesScreen';
 import ROUTES from '../routes';
 
 export type HomeStackParamList = { [ROUTES.SERVICES]: undefined };

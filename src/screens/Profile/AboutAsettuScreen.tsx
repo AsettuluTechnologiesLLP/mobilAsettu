@@ -1,92 +1,53 @@
-import { useNavigation } from '@react-navigation/native';
+import { Screen, Text } from '@ui';
+import { colors, fontSizes, lineHeights, spacing } from '@ui/tokens';
+import logger from '@utils/logger';
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { StatusBar } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { ScrollView, View } from 'react-native';
 
-import logger from '../../utils/logger';
-
-const AboutAsettuScreen = () => {
-  const navigation = useNavigation();
-
+export default function AboutAsettuScreen() {
   useEffect(() => {
     logger.debug('AboutAsettuScreen >>>> Mounted');
-    return () => {
-      logger.debug('AboutAsettuScreen <<<< UnMounted');
-    };
+    return () => logger.debug('AboutAsettuScreen <<<< UnMounted');
   }, []);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    // Native header (from ProfileStack) provides back + title + safe-area
+    <Screen safe={false} padded={false}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xl, flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ flex: 1 }}>
+          {/* Intro */}
+          <Text
+            color={colors.text}
+            style={{ fontSize: fontSizes.md, lineHeight: lineHeights.md, marginBottom: spacing.md }}
+          >
+            Asettu is your smart companion for managing assets, raising service requests, tracking
+            warranties, and connecting with OEMs in one unified app. Built for consumers who want
+            convenience, security, and seamless service experiences. Future updates will enable
+            product resale, warranty extension purchases, and much more.
+          </Text>
 
-      {/* ✅ Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-        <Text style={styles.backText}>Back</Text>
-      </TouchableOpacity>
+          {/* Section heading */}
+          <Text
+            weight="semibold"
+            color={colors.textPrimary}
+            style={{ fontSize: fontSizes.md, marginTop: spacing.lg, marginBottom: spacing.xs }}
+          >
+            Terms & Conditions
+          </Text>
 
-      {/* ✅ Title */}
-      <Text style={styles.title}>About Asettu</Text>
-
-      {/* ✅ Description and Terms */}
-      <ScrollView style={styles.descriptionContainer}>
-        <Text style={styles.description}>
-          Asettu is your smart companion for managing assets, raising service requests, tracking
-          warranties, and connecting with OEMs in one unified app. Built for consumers who want
-          convenience, security, and seamless service experiences. Future updates will enable
-          product resale, warranty extension purchases, and much more.
-        </Text>
-
-        <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-        <Text style={styles.description}>
-          By using Asettu, you agree to our terms of service and privacy policy. We are committed to
-          protecting your personal data and providing a secure platform for managing all your
-          household or business assets.
-        </Text>
+          {/* Body */}
+          <Text color={colors.text} style={{ fontSize: fontSizes.md, lineHeight: lineHeights.md }}>
+            By using Asettu, you agree to our terms of service and privacy policy. We are committed
+            to protecting your personal data and providing a secure platform for managing all your
+            household or business assets.
+          </Text>
+        </View>
       </ScrollView>
-    </View>
+    </Screen>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backText: {
-    fontSize: 16,
-    marginLeft: 8,
-    color: '#333',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#0191A7',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 24,
-    marginBottom: 8,
-    color: '#0191A7',
-  },
-  descriptionContainer: {
-    flex: 1,
-  },
-  description: {
-    fontSize: 16,
-    color: '#444',
-    lineHeight: 24,
-  },
-});
-
-export default AboutAsettuScreen;
+}

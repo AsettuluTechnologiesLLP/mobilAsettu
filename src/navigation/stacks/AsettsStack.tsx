@@ -2,7 +2,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
-import AssetsScreen from '../../screens/Assets/AssetsScreen';
+import AssetsScreen from '@/screens/Asetts/AssetsScreen';
+
 import ROUTES from '../routes';
 
 export type HomeStackParamList = { [ROUTES.ASSETS]: undefined };
