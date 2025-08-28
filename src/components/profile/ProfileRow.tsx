@@ -4,10 +4,10 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type ProfileRowProps = {
-  icon: string; // Ionicons name e.g. "people-outline"
+  icon: string;
   label: string;
   onPress: () => void;
-  rightIconName?: string; // override chevron if needed
+  rightIconName?: string;
 };
 
 const ProfileRow: React.FC<ProfileRowProps> = ({

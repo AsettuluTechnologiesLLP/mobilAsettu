@@ -9,7 +9,7 @@ import { Image, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { useLoginLogic } from './hooks/useLoginLogic';
 
 export default function LoginScreen({ navigation }: any) {
-  const { phoneNumber, setPhoneNumber, error, loading, onGetOtp, phoneInputRef } = useLoginLogic({
+  const { phoneNumber, setPhoneNumber, error, loading, onSendOtp, phoneInputRef } = useLoginLogic({
     navigation,
     defaultCountryCode: '+91',
   });
@@ -53,7 +53,7 @@ export default function LoginScreen({ navigation }: any) {
         <View style={{ marginTop: '5%', width: '80%', alignSelf: 'center' }}>
           <Button
             title="Get OTP"
-            onPress={onGetOtp}
+            onPress={onSendOtp}
             loading={loading}
             disabled={!isPhoneValid || loading}
             style={{ width: '100%' }}

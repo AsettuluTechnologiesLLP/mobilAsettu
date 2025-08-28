@@ -35,7 +35,14 @@ export default function ProfileScreen() {
     }, [refreshIfStale]),
   );
 
-  const open = (route: keyof ProfileStackParamList) => () => navigation.navigate(route);
+  // const open = (route: keyof ProfileStackParamList) => () => navigation.navigate(route);
+  // compute the union of routes whose params are `undefined`
+  type RoutesWithoutParams = {
+    [K in keyof ProfileStackParamList]: undefined extends ProfileStackParamList[K] ? K : never;
+  }[keyof ProfileStackParamList];
+
+  // use that union for the helper
+  const open = (route: RoutesWithoutParams) => () => navigation.navigate(route);
   const onEditProfile = () => navigation.navigate(ROUTES.EDIT_PROFILE);
 
   const onLogout = () => {

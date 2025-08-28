@@ -1,4 +1,4 @@
-import { apiCall } from '../apiClient';
+import { apiCall } from '../http/call';
 
 export type GetProfileResponse = {
   success: boolean;
@@ -22,11 +22,11 @@ export const getProfile = () => apiCall<GetProfileResponse>('/user/getprofile', 
 
 export type UpdateProfilePayload = {
   fullName?: string;
-  dateOfBirth?: string; // DD-MM-YYYY
+  dateOfBirth?: string;
   gender?: 'male' | 'female';
   preferredLanguage?: string;
   phoneNumber?: string;
-  phoneCountryCode?: string; // "+91"
+  phoneCountryCode?: string;
   avatarKey?: string;
 };
 

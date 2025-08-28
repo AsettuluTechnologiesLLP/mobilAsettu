@@ -1,4 +1,4 @@
-import { apiCall } from '../apiClient';
+import { apiCall } from '../http/call';
 
 export type SendOtpResponse = { success: boolean; error?: string };
 export type VerifyOtpResponse = {

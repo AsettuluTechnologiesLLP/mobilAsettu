@@ -1,10 +1,10 @@
 // src/screens/Auth/hooks/useLoginLogic.ts
+import { sendOtp } from '@services/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, Platform } from 'react-native';
 
 import ERROR_MESSAGES from '../../../constants/errors';
 import ROUTES from '../../../navigation/routes';
-import { getOtp } from '../../../services/api';
 import logger from '../../../utils/logger';
 import { validateMobile } from '../../../utils/validation';
 
@@ -38,7 +38,7 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
   const validation = validateMobile(phoneNumber);
   const isValid = validation.valid;
 
-  const onGetOtp = useCallback(async () => {
+  const onSendOtp = useCallback(async () => {
     if (loading) return; // debounce
 
     // Re-check before API (no need to capture `isValid`)
@@ -52,7 +52,7 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
     setLoading(true);
     setServerError('');
     try {
-      const response = await getOtp(defaultCountryCode, phoneNumber);
+      const response = await sendOtp(defaultCountryCode, phoneNumber);
       if (response?.success) {
         logger.debug('[useLoginLogic] OTP requested successfully and routing to OTP_VERIFICATION');
         navigation.replace(ROUTES.OTP, {
@@ -85,6 +85,6 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
     isValid,
     loading,
     phoneInputRef,
-    onGetOtp,
+    onSendOtp,
   };
 }

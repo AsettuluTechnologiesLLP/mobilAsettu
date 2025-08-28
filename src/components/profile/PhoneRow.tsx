@@ -26,10 +26,11 @@ export default function PhoneRow({ countryCode, phone, setPhone, error }: Props)
         <TextInput
           value={phone}
           onChangeText={(t) => setPhone(t.replace(/\D+/g, ''))}
-          style={forms.input}
+          style={[forms.input, forms.inputDisabled]}
           placeholder="10-digit number"
           keyboardType="number-pad"
           maxLength={10}
+          editable={false}
         />
         {error ? <Text style={forms.error}>{error}</Text> : null}
       </View>

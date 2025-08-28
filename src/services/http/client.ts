@@ -6,7 +6,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { getApiErrorMessage } from './error';
 
 /** ───────── Config ───────── **/
-const API_URL = 'http://192.168.1.6:8080/api';
+const API_URL = 'http://192.168.1.23:8080/api';
 const TIMEOUT_DURATION = 10_000;
 const AUTH_WHITELIST = ['/auth/sendotp', '/auth/verifyotp', '/auth/refreshtoken'];
 const USE_BEARER = true;
@@ -63,8 +63,8 @@ const SENSITIVE_KEYS = new Set([
   'accessToken',
   'refreshToken',
   'password',
-  'otp',
-  'otpCode',
+  // 'otp',
+  // 'otpCode',
   'token',
 ]);
 
@@ -108,7 +108,7 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     const redactedHeaders = redactDeep(config.headers || {});
     const redactedPayload = redactDeep(config.data);
 
-    logger.debug(`[HTTP] → [${cfg.__meta.requestId}] ${method} ${url}`);
+    logger.info(`[HTTP] → [${cfg.__meta.requestId}] ${method} ${url}`);
     if (redactedHeaders && Object.keys(redactedHeaders).length) {
       logger.debug('[HTTP] headers', redactedHeaders);
     }

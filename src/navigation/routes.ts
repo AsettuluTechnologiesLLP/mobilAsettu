@@ -24,8 +24,13 @@ const ROUTES = {
   // Profile (NEW)
   EDIT_PROFILE: 'EditProfile',
   ABOUT_ASETTU: 'AboutAsettu',
+
+  // Household
   MANAGE_HOUSEHOLDS: 'ManageHouseholds',
+  MANAGE_HOUSEHOLD_DETAILS: 'HouseholdDetails',
   MANAGE_MEMBERS: 'ManageMembers',
+
+  // Asetts
   MANAGE_ASSETS: 'ManageAssets',
   MANAGE_SERVICE_REQUESTS: 'ManageServiceRequests',
 } as const;

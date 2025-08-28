@@ -4,25 +4,38 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
+import ManageAssetsScreen from '@screens/Asetts/ManageAssetsScreen';
+import HouseholdDetailsScreen from '@screens/Households/HouseholdDetailsScreen';
+import ManageMembersScreen from '@screens/Households/ManageHouseholdMembersScreen';
+import ManageHouseholdsScreen from '@screens/Households/ManageHouseholdsScreen';
 import AboutAsettuScreen from '@screens/Profile/AboutAsettuScreen';
 import EditProfileScreen from '@screens/Profile/EditProfileScreen';
 import ProfileScreen from '@screens/Profile/ProfileScreen';
+import ManageServiceRequestsScreen from '@screens/Services/ManageServiceRequestsScreen';
 import { colors } from '@ui/tokens';
 import React from 'react';
-
-import ManageAssetsScreen from '@/screens/Asetts/ManageAssetsScreen';
-import ManageMembersScreen from '@/screens/Households/ManageHouseholdMembersScreen';
-import ManageHouseholdsScreen from '@/screens/Households/ManageHouseholdsScreen';
-import ManageServiceRequestsScreen from '@/screens/Services/ManageServiceRequestsScreen';
 
 export type ProfileStackParamList = {
   [ROUTES.PROFILE]: undefined;
   [ROUTES.EDIT_PROFILE]: undefined;
   [ROUTES.ABOUT_ASETTU]: undefined;
+
   [ROUTES.MANAGE_HOUSEHOLDS]: undefined;
   [ROUTES.MANAGE_MEMBERS]: undefined;
   [ROUTES.MANAGE_ASSETS]: undefined;
   [ROUTES.MANAGE_SERVICE_REQUESTS]: undefined;
+
+  [ROUTES.MANAGE_HOUSEHOLD_DETAILS]: {
+    householdId: string;
+    seed?: {
+      name?: string;
+      address?: string;
+      city?: string;
+      myRole?: string;
+    };
+    /** UI may set an initial mode; final permissions still come from API */
+    mode?: 'view' | 'edit';
+  };
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -34,8 +47,7 @@ const commonHeader: NativeStackNavigationOptions = {
   headerTitleStyle: { color: colors.textPrimary },
   headerTintColor: colors.textPrimary,
   headerShadowVisible: true,
-  //headerBackTitleVisible: false, // tidy iOS back title
-  contentStyle: { backgroundColor: colors.background }, // avoid white flashes
+  contentStyle: { backgroundColor: colors.background },
 };
 
 export default function ProfileStackNavigator() {
@@ -63,6 +75,11 @@ export default function ProfileStackNavigator() {
         name={ROUTES.MANAGE_HOUSEHOLDS}
         component={ManageHouseholdsScreen}
         options={{ title: 'My Households' }}
+      />
+      <Stack.Screen
+        name={ROUTES.MANAGE_HOUSEHOLD_DETAILS}
+        component={HouseholdDetailsScreen}
+        options={{ title: 'Household Details' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_MEMBERS}

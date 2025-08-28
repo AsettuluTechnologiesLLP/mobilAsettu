@@ -4,6 +4,7 @@ export const palette = {
   white: '#FFFFFF',
   black: '#000000',
   gray50: '#FAFAFA',
+  gray100: '#F3F4F6',
   gray200: '#E5E7EB',
   gray300: '#D1D5DB',
   gray500: '#6B7280',
@@ -24,12 +25,14 @@ export const palette = {
   green600: '#16A34A',
   amber600: '#D97706',
   red600: '#DC2626',
+
+  danger: '#DC2626', // used for error text, toasts, etc.
+  badgeBg: '#EEF2FF', // subtle tag/chip background
 } as const;
 
 export const colors = {
   // Splash
   splashBackground: palette.brandBlack,
-  // alias for places using splashBg earlier
   splashBg: palette.brandBlack,
 
   // Base
@@ -66,4 +69,11 @@ export const colors = {
   focus: palette.gray900,
   selection: palette.gray900,
   ripple: palette.gray200,
+
+  // --- ADD THESE ALIASES (used by screens) ---
+  danger: palette.danger,
+  badgeBg: palette.badgeBg,
+
+  // HouseholdTile
+  tileBackground: palette.gray50,
 } as const;
