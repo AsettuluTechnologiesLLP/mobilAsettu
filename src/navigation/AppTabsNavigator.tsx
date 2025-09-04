@@ -48,7 +48,6 @@ function TabBarIcon({ routeName, focused, color, size }: TabBarIconProps) {
   return <Ionicons name={getIconName(routeName, focused)} size={size} color={color} />;
 }
 
-// ✅ Hoisted: not created inside a React component
 const tabScreenOptions = ({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
   headerShown: false,
   tabBarShowLabel: true,

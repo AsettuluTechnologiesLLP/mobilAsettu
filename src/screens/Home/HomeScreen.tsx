@@ -12,8 +12,6 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    // ⬇️ padded={false} so Screen doesn’t add spacing.xl
-    // ⬇️ edges={['top']} keeps only the status-bar/notch inset
     <Screen padded={false} edges={['top']}>
       <ScrollView
         contentInsetAdjustmentBehavior="never" // don’t add another top inset

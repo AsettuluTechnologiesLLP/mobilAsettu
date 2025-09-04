@@ -8,6 +8,7 @@ import { useAuth } from '@screens/Auth/hooks/useAuth';
 import { useProfile } from '@screens/Profile/hooks/useProfile';
 import { Screen, Text } from '@ui';
 import { colors, fontSizes, spacing } from '@ui/tokens';
+import logger from '@utils/logger';
 import React, { useEffect } from 'react';
 import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,8 +19,8 @@ export default function ProfileScreen() {
   const { profile } = useProfile();
 
   useEffect(() => {
-    // no-op placeholder if you want logs here
-    return () => {};
+    logger.debug('ProfileScreen >>>> Mounted');
+    return () => logger.debug('ProfileScreen <<<< Unmounted');
   }, []);
 
   const name = (profile?.name || 'User').trim();

@@ -4,10 +4,10 @@ import logger from '@utils/logger';
 import React, { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 
-export default function ServicesScreen() {
+export default function AsettsScreen() {
   useEffect(() => {
-    logger.debug('ServicesScreen >>>> Mounted');
-    return () => logger.debug('ServicesScreen <<<< Unmounted');
+    logger.debug('AsettsScreen >>>> Mounted');
+    return () => logger.debug('AsettsScreen <<<< Unmounted');
   }, []);
 
   return (

@@ -170,7 +170,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (isStale()) refresh({ source: 'refreshIfStale' }).catch(() => {});
   }, [isStale, refresh]);
 
-  const setLocal = useCallback((patch: Partial<Profile>) => {
     setProfile((prev) => {
       const next = { ...(prev || {}), ...patch };
       AsyncStorage.setItem(

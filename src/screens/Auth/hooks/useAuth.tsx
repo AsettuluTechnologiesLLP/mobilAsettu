@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   logger.debug('[useAuth] AuthProvider >>>>>> Mounted');
 
-  // When API-layer refresh fails, auto-logout cleanly
   useEffect(() => {
     logger.debug('[useAuth] EFFECT-0 >>>>>> Mounted');
     setUnauthorizedHandler(() => {
@@ -118,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (access && isAccessTokenValid(access)) {
-        // Ensure API layer has current header (idempotent)
         setAuthTokens({ accessToken: access, refreshToken: refresh });
         logger.debug('[useAuth] refreshIfNeeded(): access valid → no refresh');
         return;
@@ -134,12 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.debug('[useAuth] refreshIfNeeded(): trying refresh');
       const res = await tryRefresh(refresh);
       if (res?.accessToken) {
-        // Store rotated tokens if provided
         await AsyncStorage.setItem('accessToken', res.accessToken);
         if (res.refreshToken) {
           await AsyncStorage.setItem('refreshToken', res.refreshToken);
         }
-        // Sync to API layer
         setAuthTokens({ accessToken: res.accessToken, refreshToken: res.refreshToken ?? refresh });
 
         logger.debug('[useAuth] refreshIfNeeded(): Status → Authenticated');
@@ -154,7 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logout]);
 
-  // --- initial auth check on mount ---
   useEffect(() => {
     logger.debug('[useAuth] EFFECT-1 >>>>>> Mounted : With SplashDelay ', {
       splashMs: APP_CONFIG.SPLASH_DELAY_MS,
@@ -162,7 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        // Enforce splash delay & read tokens in parallel
         const delay = new Promise<void>((resolve) =>
           setTimeout(resolve, APP_CONFIG.SPLASH_DELAY_MS),
         );
@@ -179,7 +173,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (access && isAccessTokenValid(access)) {
-          // Keep API layer in sync
           setAuthTokens({ accessToken: access, refreshToken: refresh });
           logger.debug('[useAuth] Valid Access OK → Authenticated');
           setStatus('authenticated');
@@ -205,7 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           logger.warn('[useAuth] Refresh returned Null/Invalid');
         }
 
-        // No valid tokens
         setAuthTokens(null);
         logger.debug('[useAuth] No Valid Tokens → UnAuthenticated');
         setStatus('unauthenticated');
@@ -221,7 +213,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // value memo depends on the stable callbacks + status
   const value = useMemo(
     () => ({ status, login, logout, refreshIfNeeded }),
     [status, login, logout, refreshIfNeeded],
@@ -238,14 +229,12 @@ export function useAuth() {
   return ctx;
 }
 
-/** Try to refresh; returns new tokens (access + optional rotated refresh) or null */
 async function tryRefresh(
   _refreshToken: string,
 ): Promise<{ accessToken: string; refreshToken?: string | null } | null> {
   try {
     const res = await refreshAccess(_refreshToken);
 
-    // Accept both flat and nested shapes (defensive)
     const accessToken = (res as any).accessToken ?? (res as any).data?.accessToken ?? null;
     const newRefresh = (res as any).refreshToken ?? (res as any).data?.refreshToken ?? null;
 
