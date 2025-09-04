@@ -108,7 +108,7 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     const redactedHeaders = redactDeep(config.headers || {});
     const redactedPayload = redactDeep(config.data);
 
-    logger.info(`[HTTP] → [${cfg.__meta.requestId}] ${method} ${url}`);
+    logger.info(`[HTTP] → → → → [${cfg.__meta.requestId}] ${method} ${url}`);
     if (redactedHeaders && Object.keys(redactedHeaders).length) {
       logger.debug('[HTTP] Request Headers', redactedHeaders);
     }

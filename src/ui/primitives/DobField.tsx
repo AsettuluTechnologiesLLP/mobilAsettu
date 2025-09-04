@@ -4,17 +4,10 @@ import React, { useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, StyleProp, TextInput, View, ViewStyle } from 'react-native';
 
 type Props = {
-  /** "DD-MM-YYYY" or empty/null */
   value: string | null;
   onChange: (next: string) => void;
-
-  /** Optional: style the outer wrapper (spacing controlled by the screen) */
   style?: StyleProp<ViewStyle>;
-
-  /** Optional: draw red border when true (error text lives in the screen) */
   hasError?: boolean;
-
-  /** Min/Max constraints (no future by default) */
   minDate?: Date;
   maxDate?: Date;
 };

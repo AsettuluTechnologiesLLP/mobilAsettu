@@ -132,8 +132,8 @@ export default function EditProfileScreen() {
 
             <Field label="Date of birth" error={errors.dob}>
               <DobField
-                value={dob} // <-- string "DD-MM-YYYY"
-                onChange={setDob} // <-- returns "DD-MM-YYYY"
+                value={dob}
+                onChange={setDob}
                 hasError={!!errors.dob}
                 style={{ marginTop: 0 }}
               />
