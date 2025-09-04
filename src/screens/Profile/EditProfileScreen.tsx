@@ -1,3 +1,4 @@
+// src/screens/Profile/EditProfileScreen.tsx
 import { useEditProfileForm } from '@screens/Profile/hooks/useEditProfileForm';
 import { Button, Screen, Text } from '@ui';
 import DobField from '@ui/primitives/DobField';
@@ -5,17 +6,6 @@ import GenderPicker from '@ui/primitives/GenderPicker';
 import { colors, contentWidth, fontSizes, lineHeights, radii, spacing } from '@ui/tokens';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
-
-const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-const dateToDDMMYYYY = (d: Date | null) =>
-  d ? `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}` : null;
-const ddmmyyyyToDate = (s: string | null) => {
-  if (!s) return null;
-  const [dd, mm, yyyy] = s.split('-').map((p) => parseInt(p, 10));
-  if (!dd || !mm || !yyyy) return null;
-  const dt = new Date(yyyy, mm - 1, dd);
-  return isNaN(dt.getTime()) ? null : dt;
-};
 
 function Field({
   label,
@@ -51,10 +41,10 @@ export default function EditProfileScreen() {
   const {
     name,
     email,
-    phoneNumber,
-    phoneCountryCode,
     dob,
     gender,
+    phoneNumber,
+    phoneCountryCode,
     setName,
     setEmail,
     setDob,
@@ -142,8 +132,8 @@ export default function EditProfileScreen() {
 
             <Field label="Date of birth" error={errors.dob}>
               <DobField
-                value={dateToDDMMYYYY(dob)}
-                onChange={(s) => setDob(ddmmyyyyToDate(s))}
+                value={dob} // <-- string "DD-MM-YYYY"
+                onChange={setDob} // <-- returns "DD-MM-YYYY"
                 hasError={!!errors.dob}
                 style={{ marginTop: 0 }}
               />
