@@ -110,10 +110,10 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 
     logger.info(`[HTTP] → [${cfg.__meta.requestId}] ${method} ${url}`);
     if (redactedHeaders && Object.keys(redactedHeaders).length) {
-      logger.debug('[HTTP] headers', redactedHeaders);
+      logger.debug('[HTTP] Request Headers', redactedHeaders);
     }
     if (config.data !== undefined) {
-      logger.info('[HTTP] payload', redactedPayload);
+      logger.info('[HTTP] Request Payload', redactedPayload);
     }
   }
 
@@ -146,14 +146,14 @@ http.interceptors.response.use(
           ms ? ` (${ms} ms)` : ''
         }`,
       );
-      logger.info('[HTTP] body', redactDeep(res.data));
+      logger.info('[HTTP] Response Body', redactDeep(res.data));
     }
     return res;
   },
   async (error) => {
     // Map offline message (thrown by request interceptor)
     if ((error as any)?.message === ERROR_MESSAGES.NO_INTERNET) {
-      if (HTTP_LOG) logger.error('[HTTP] ✖ offline', ERROR_MESSAGES.NO_INTERNET);
+      if (HTTP_LOG) logger.error('[HTTP] ✖ OFFLINE', ERROR_MESSAGES.NO_INTERNET);
       return Promise.reject(new Error(ERROR_MESSAGES.NO_INTERNET));
     }
 

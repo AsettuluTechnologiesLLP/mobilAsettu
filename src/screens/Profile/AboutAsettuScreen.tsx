@@ -1,15 +1,9 @@
 import { Screen, Text } from '@ui';
 import { colors, fontSizes, lineHeights, spacing } from '@ui/tokens';
-import logger from '@utils/logger';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 export default function AboutAsettuScreen() {
-  useEffect(() => {
-    logger.debug('AboutAsettuScreen >>>> Mounted');
-    return () => logger.debug('AboutAsettuScreen <<<< UnMounted');
-  }, []);
-
   return (
     // Native header (from ProfileStack) provides back + title + safe-area
     <Screen safe={false} padded={false}>

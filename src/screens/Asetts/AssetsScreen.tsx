@@ -1,15 +1,9 @@
 import { Screen, Text } from '@ui';
 import { colors, fontSizes, spacing } from '@ui/tokens';
-import logger from '@utils/logger';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 export default function AsettsScreen() {
-  useEffect(() => {
-    logger.debug('AsettsScreen >>>> Mounted');
-    return () => logger.debug('AsettsScreen <<<< Unmounted');
-  }, []);
-
   return (
     <Screen padded={false} edges={['top']}>
       <ScrollView

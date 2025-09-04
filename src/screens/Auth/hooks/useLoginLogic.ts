@@ -9,8 +9,8 @@ import logger from '../../../utils/logger';
 import { validateMobile } from '../../../utils/validation';
 
 type UseLoginLogicParams = {
-  navigation: any; // if you have typed stacks, replace `any`
-  defaultCountryCode?: string; // e.g. '+91'
+  navigation: any;
+  defaultCountryCode?: string;
 };
 
 export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLoginLogicParams) {
@@ -20,7 +20,6 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
   const phoneInputRef = useRef<any>(null);
 
   useEffect(() => {
-    logger.debug('[useLoginLogic] useLoginLogic >>>> Mounted');
     phoneInputRef.current?.focus?.();
 
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -30,18 +29,15 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
 
     return () => {
       sub.remove();
-      logger.debug('[useLoginLogic] useLoginLogic <<<< UnMounted');
     };
   }, []);
 
-  // derived validation
   const validation = validateMobile(phoneNumber);
   const isValid = validation.valid;
 
   const onSendOtp = useCallback(async () => {
-    if (loading) return; // debounce
+    if (loading) return;
 
-    // Re-check before API (no need to capture `isValid`)
     const v = validateMobile(phoneNumber);
     if (!v.valid) {
       setServerError(v.message || ERROR_MESSAGES.INVALID_PHONE_NUMBER);
@@ -78,7 +74,6 @@ export function useLoginLogic({ navigation, defaultCountryCode = '+91' }: UseLog
     phoneNumber,
     setPhoneNumber: (t: string) => {
       setServerError('');
-      // keep digits only (defensive)
       setPhoneNumber(t.replace(/\D+/g, ''));
     },
     error: serverError || (phoneNumber.length > 0 && !isValid ? validation.message || '' : ''),

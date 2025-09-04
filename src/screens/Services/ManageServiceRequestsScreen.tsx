@@ -1,16 +1,10 @@
 // src/screens/Assets/ManageServiceRequestsScreen.tsx
 import { Button, Screen, Text } from '@ui';
 import { colors, fontSizes, lineHeights, spacing } from '@ui/tokens';
-import logger from '@utils/logger';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 export default function ManageServiceRequestsScreen() {
-  useEffect(() => {
-    logger.debug('ManageServiceRequestsScreen >>>> Mounted');
-    return () => logger.debug('ManageServiceRequestsScreen <<<< Unmounted');
-  }, []);
-
   return (
     // Native header (from ProfileStack) provides back + title + safe-area
     <Screen safe={false} padded={false}>

@@ -2,8 +2,7 @@
 import { Logos } from '@assets/image';
 import PhoneInput from '@components/inputs/PhoneInput';
 import { Button, Screen, vscale } from '@ui';
-import logger from '@utils/logger';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, View } from 'react-native';
 
 import { useLoginLogic } from './hooks/useLoginLogic';
@@ -15,11 +14,6 @@ export default function LoginScreen({ navigation }: any) {
   });
 
   const [isPhoneValid, setIsPhoneValid] = useState(false); // driven by PhoneInput
-
-  useEffect(() => {
-    logger.debug('LoginScreen >>>> Mounted');
-    return () => logger.debug('LoginScreen <<<< Unmounted');
-  }, []);
 
   return (
     <Screen>

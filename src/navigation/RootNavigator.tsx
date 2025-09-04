@@ -29,11 +29,9 @@ export default function RootNavigator() {
   const prev = useRef(branch);
 
   useEffect(() => {
-    logger.debug('[RootNav] Mounted >>>>>> RootNavigator.tsx');
     if (prev.current !== branch)
-      logger.info('[RootNav] Branch', { from: prev.current, to: branch });
+      logger.debug('[RootNav] Branch', { from: prev.current, to: branch });
     prev.current = branch;
-    return () => logger.debug('[RootNav] Unmounted <<<<<< RootNavigator.tsx');
   }, [branch]);
 
   return (

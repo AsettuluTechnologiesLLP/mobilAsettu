@@ -26,11 +26,9 @@ export function useOtpLogic({ phoneNumber, countryCode }: UseOtpLogicParams) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    logger.debug('[useOtpLogic] Mounted');
     startTimer();
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      logger.debug('[useOtpLogic] Unmounted');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -83,7 +81,6 @@ export function useOtpLogic({ phoneNumber, countryCode }: UseOtpLogicParams) {
       setError(ERROR_MESSAGES.INVALID_OTP);
       return;
     }
-    logger.debug('[Otp] handleVerifyOtp', { phoneNumber, countryCode, enteredOtp });
 
     try {
       setLoading(true);
@@ -95,7 +92,6 @@ export function useOtpLogic({ phoneNumber, countryCode }: UseOtpLogicParams) {
       const refreshToken = (res as any)?.refreshToken ?? (res as any)?.data?.refreshToken ?? null;
 
       if ((res as any)?.success && accessToken && refreshToken) {
-        logger.debug('[Otp] verify ✓ → login()');
         await login({ accessToken, refreshToken });
         setLocal({
           phoneNumber,
@@ -111,8 +107,6 @@ export function useOtpLogic({ phoneNumber, countryCode }: UseOtpLogicParams) {
         if (typeof isNewUser !== 'undefined')
           extraPairs.push(['isNewUser', JSON.stringify(!!isNewUser)]);
         if (extraPairs.length) await AsyncStorage.multiSet(extraPairs);
-
-        logger.debug('[Otp] verify ✓ → Status → Authenticated');
       } else {
         const msg = (res as any)?.error || (res as any)?.message || ERROR_MESSAGES.INVALID_OTP;
         logger.warn('[Otp] verify ✗', msg);

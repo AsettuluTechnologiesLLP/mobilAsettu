@@ -2,8 +2,7 @@
 import { Logos } from '@assets/image';
 import { Button, colors, OTPInput, otpStyles, Screen, spacing, Text, vscale } from '@ui';
 import type { OTPInputRef } from '@ui/primitives/OTPInput';
-import logger from '@utils/logger';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Image, KeyboardAvoidingView, Platform, TouchableOpacity, View } from 'react-native';
 
 import { useOtpLogic } from './hooks/useOtpLogic';
@@ -27,11 +26,6 @@ export default function OTPVerificationScreen({ route }: Props) {
     handleResendOtp,
     handleVerifyOtp,
   } = useOtpLogic({ phoneNumber, countryCode });
-
-  useEffect(() => {
-    logger.debug('OTPVerificationScreen >>>> Mounted');
-    return () => logger.debug('OTPVerificationScreen <<<< Unmounted');
-  }, []);
 
   return (
     <Screen bg={colors.background} padded>

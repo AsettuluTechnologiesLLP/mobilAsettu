@@ -58,38 +58,23 @@ function isAccessTokenValid(token: string) {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('checking');
 
-  logger.debug('[useAuth] AuthProvider >>>>>> Mounted');
-
   useEffect(() => {
-    logger.debug('[useAuth] EFFECT-0 >>>>>> Mounted');
     setUnauthorizedHandler(() => {
-      logger.warn('[useAuth] onUnauthorized → logout()');
       logout();
     });
     return () => {
       setUnauthorizedHandler(null);
-      logger.debug('[useAuth] EFFECT-0 <<<<<< Unmounted');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- stable callbacks ---
   const login = useCallback(async (tokens: { accessToken: string; refreshToken: string }) => {
-    logger.debug('[useAuth] login(): persisting tokens', {
-      access: mask(tokens.accessToken),
-      refresh: mask(tokens.refreshToken),
-    });
-
-    // Persist to storage
     await AsyncStorage.multiSet([
       ['accessToken', tokens.accessToken],
       ['refreshToken', tokens.refreshToken],
     ]);
 
-    // Sync to API layer (sets Authorization header globally)
     setAuthTokens({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
-
-    logger.info('[useAuth] Status → Authenticated');
     setStatus('authenticated');
   }, []);
 
@@ -97,10 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logger.debug('[useAuth] logout(): clearing tokens');
     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
 
-    // Clear API layer headers/tokens
     setAuthTokens(null);
-
-    logger.info('[useAuth] Status → UnAuthenticated');
     setStatus('unauthenticated');
   }, []);
 
@@ -151,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [logout]);
 
   useEffect(() => {
-    logger.debug('[useAuth] EFFECT-1 >>>>>> Mounted : With SplashDelay ', {
+    logger.debug('[useAuth] Splash Delay : ', {
       splashMs: APP_CONFIG.SPLASH_DELAY_MS,
     });
 
@@ -174,7 +156,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (access && isAccessTokenValid(access)) {
           setAuthTokens({ accessToken: access, refreshToken: refresh });
-          logger.debug('[useAuth] Valid Access OK → Authenticated');
           setStatus('authenticated');
           return;
         }
@@ -199,7 +180,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setAuthTokens(null);
-        logger.debug('[useAuth] No Valid Tokens → UnAuthenticated');
         setStatus('unauthenticated');
       } catch (e) {
         setAuthTokens(null);
@@ -209,7 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
     return () => {
       setUnauthorizedHandler(null);
-      logger.debug('[useAuth] EFFECT-1 <<<<<< Unmounted');
     };
   }, []);
 

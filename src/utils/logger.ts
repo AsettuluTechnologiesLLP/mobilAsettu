@@ -22,7 +22,7 @@ log.setLevel(levelFromEnv(ENV));
 const ICONS = {
   warn: '⚠️', // Warning sign
   error: '🛑', // Stop sign
-  info: 'ℹ️', // Information
+  info: 'ℹ️ ', // Information
   debug: '🐛', // Bug (for debugging)
 };
 
