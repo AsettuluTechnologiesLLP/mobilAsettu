@@ -172,7 +172,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               accessToken: res.accessToken,
               refreshToken: res.refreshToken ?? refresh,
             });
-            logger.debug('[useAuth] Refresh OK → Authenticated');
             setStatus('authenticated');
             return;
           }
@@ -218,10 +217,6 @@ async function tryRefresh(
     const newRefresh = (res as any).refreshToken ?? (res as any).data?.refreshToken ?? null;
 
     if (res?.success && accessToken) {
-      logger.debug('[useAuth] tryRefresh(): ✓', {
-        access: mask(accessToken),
-        rotated: !!newRefresh,
-      });
       return { accessToken, refreshToken: newRefresh };
     }
 

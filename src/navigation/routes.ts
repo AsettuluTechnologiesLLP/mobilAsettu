@@ -21,7 +21,7 @@ const ROUTES = {
   LOGIN: 'Login',
   OTP: 'Otp',
 
-  // Profile (NEW)
+  // Profile
   EDIT_PROFILE: 'EditProfile',
   ABOUT_ASETTU: 'AboutAsettu',
 

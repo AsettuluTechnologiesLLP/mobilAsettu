@@ -118,7 +118,7 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
 
       const now = Date.now();
-      const bypassCooldown = source === 'after-save'; // always fetch right after a save
+      const bypassCooldown = source === 'after-save';
       if (!bypassCooldown && now - lastKickRef.current < COOLDOWN_MS) {
         logger.debug('[useProfile] refresh skipped (cooldown)', { source });
         return;
@@ -143,7 +143,7 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
           name: d?.full_name,
           email: d?.email ?? undefined,
           gender: d?.gender ?? undefined,
-          dateOfBirth: d?.date_of_birth ?? undefined, // ISO
+          dateOfBirth: d?.date_of_birth ?? undefined,
           phoneNumber: d?.phone ?? d?.phoneNumber ?? undefined,
           phoneCountryCode: d?.country_code ?? d?.phoneCountryCode ?? undefined,
           avatarUrl: d?.profile_picture ?? d?.avatar_picture ?? undefined,

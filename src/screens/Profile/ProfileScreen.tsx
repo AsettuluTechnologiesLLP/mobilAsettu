@@ -23,7 +23,6 @@ export default function ProfileScreen() {
       ? `${profile.phoneCountryCode} ${profile.phoneNumber}`
       : '—';
 
-  // helper to navigate to routes with no params
   type RoutesWithoutParams = {
     [K in keyof ProfileStackParamList]: undefined extends ProfileStackParamList[K] ? K : never;
   }[keyof ProfileStackParamList];
@@ -62,10 +61,7 @@ export default function ProfileScreen() {
               {name}
             </Text>
 
-            <TouchableOpacity
-              onPress={onEditProfile}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
+            <TouchableOpacity onPress={onEditProfile}>
               <Ionicons name="create-outline" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>

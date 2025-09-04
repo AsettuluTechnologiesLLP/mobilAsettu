@@ -6,7 +6,6 @@ import { colors, contentWidth, fontSizes, lineHeights, radii, spacing } from '@u
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 
-// helpers (unchanged)
 const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const dateToDDMMYYYY = (d: Date | null) =>
   d ? `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}` : null;
@@ -18,7 +17,6 @@ const ddmmyyyyToDate = (s: string | null) => {
   return isNaN(dt.getTime()) ? null : dt;
 };
 
-// Uniform field wrapper (label + error + children)
 function Field({
   label,
   error,

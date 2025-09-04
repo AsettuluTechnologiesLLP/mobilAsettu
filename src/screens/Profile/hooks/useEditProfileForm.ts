@@ -17,11 +17,9 @@ type Errors = {
 
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-/** Convert a Date to ISO at midnight UTC (stable date only) */
 const toIsoMidnightUtc = (d: Date) =>
   new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).toISOString();
 
-/** Normalize a Date (or null) into ISO-midnight string for comparisons */
 const normDobISO = (d: Date | null) => (d ? toIsoMidnightUtc(d) : '');
 
 export function useEditProfileForm() {
