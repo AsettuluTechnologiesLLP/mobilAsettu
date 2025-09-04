@@ -1,48 +1,39 @@
-import { AvatarKey } from '@assets/avatars';
-import { ProfileHeader } from '@components/profile/ProfileHeader';
+// src/screens/Profile/ProfileScreen.tsx
 import ProfileRow from '@components/profile/ProfileRow';
 import ROUTES from '@navigation/routes';
 import { ProfileStackParamList } from '@navigation/stacks/ProfileStack';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '@screens/Auth/hooks/useAuth';
 import { useProfile } from '@screens/Profile/hooks/useProfile';
-import { Screen } from '@ui';
-import { spacing } from '@ui/tokens';
-import logger from '@utils/logger';
+import { Screen, Text } from '@ui';
+import { colors, fontSizes, spacing } from '@ui/tokens';
 import React, { useEffect } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const { logout } = useAuth();
-  const { profile, refreshIfStale } = useProfile();
+  const { profile } = useProfile();
 
-  const name = profile?.name || 'User';
+  useEffect(() => {
+    // no-op placeholder if you want logs here
+    return () => {};
+  }, []);
+
+  const name = (profile?.name || 'User').trim();
   const phoneDisplay =
     profile?.phoneCountryCode && profile?.phoneNumber
       ? `${profile.phoneCountryCode} ${profile.phoneNumber}`
       : '—';
 
-  useEffect(() => {
-    logger.debug('ProfileScreen >>>> Mounted');
-    return () => logger.debug('ProfileScreen <<<< Unmounted');
-  }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      refreshIfStale();
-    }, [refreshIfStale]),
-  );
-
-  // const open = (route: keyof ProfileStackParamList) => () => navigation.navigate(route);
-  // compute the union of routes whose params are `undefined`
+  // helper to navigate to routes with no params
   type RoutesWithoutParams = {
     [K in keyof ProfileStackParamList]: undefined extends ProfileStackParamList[K] ? K : never;
   }[keyof ProfileStackParamList];
-
-  // use that union for the helper
   const open = (route: RoutesWithoutParams) => () => navigation.navigate(route);
+
   const onEditProfile = () => navigation.navigate(ROUTES.EDIT_PROFILE);
 
   const onLogout = () => {
@@ -53,38 +44,51 @@ export default function ProfileScreen() {
   };
 
   return (
-    // Match Home/Asets pattern: no default padding, only top safe area
     <Screen padded={false} edges={['top']}>
       <ScrollView
-        contentInsetAdjustmentBehavior="never" // avoid double top inset
+        contentInsetAdjustmentBehavior="never"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: spacing.md,
           paddingBottom: spacing.lg,
+          paddingTop: spacing.md,
           flexGrow: 1,
         }}
       >
-        <ProfileHeader
-          name={name}
-          phone={phoneDisplay}
-          onEdit={onEditProfile}
-          initial={(name?.[0] as string) || 'U'}
-          avatarKey={profile?.avatarKey as AvatarKey | undefined}
-        />
+        {/* Simple header: name + edit icon, phone below */}
+        <View style={{ marginTop: spacing.md, marginBottom: spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text
+              weight="bold"
+              style={{ fontSize: fontSizes.lg, color: colors.text, marginRight: spacing.xs }}
+              numberOfLines={1}
+            >
+              {name}
+            </Text>
 
-        {/* Section spacer (tokens only) */}
-        <View style={{ height: spacing.md }} />
+            <TouchableOpacity
+              onPress={onEditProfile}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
+          <Text
+            color={colors.textMuted}
+            style={{ fontSize: fontSizes.sm, marginTop: 4 }}
+            numberOfLines={1}
+          >
+            {phoneDisplay}
+          </Text>
+        </View>
+
+        {/* Actions / navigation rows */}
         <ProfileRow
           icon="home-outline"
           label="Manage Households"
           onPress={open(ROUTES.MANAGE_HOUSEHOLDS)}
-        />
-        <ProfileRow
-          icon="people-outline"
-          label="Manage Members"
-          onPress={open(ROUTES.MANAGE_MEMBERS)}
         />
         <ProfileRow
           icon="briefcase-outline"

@@ -1,54 +1,87 @@
-// src/screens/Profile/EditProfileScreen.tsx
-import AvatarChooserSheet from '@components/profile/AvatarChooserSheet';
-import GenderPicker from '@components/profile/GenderPicker';
-import PhoneRow from '@components/profile/PhoneRow';
 import { useEditProfileForm } from '@screens/Profile/hooks/useEditProfileForm';
 import { Button, Screen, Text } from '@ui';
 import DobField from '@ui/primitives/DobField';
+import GenderPicker from '@ui/primitives/GenderPicker';
 import { colors, contentWidth, fontSizes, lineHeights, radii, spacing } from '@ui/tokens';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 
-/* Helpers to bridge Date <-> "DD-MM-YYYY" expected by DobField */
-function pad(n: number) {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-function dateToDDMMYYYY(d: Date | null): string | null {
-  if (!d) return null;
-  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
-}
-function ddmmyyyyToDate(s: string | null): Date | null {
+// helpers (unchanged)
+const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+const dateToDDMMYYYY = (d: Date | null) =>
+  d ? `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}` : null;
+const ddmmyyyyToDate = (s: string | null) => {
   if (!s) return null;
-  const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(s);
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-  return isNaN(d.getTime()) ? null : d;
+  const [dd, mm, yyyy] = s.split('-').map((p) => parseInt(p, 10));
+  if (!dd || !mm || !yyyy) return null;
+  const dt = new Date(yyyy, mm - 1, dd);
+  return isNaN(dt.getTime()) ? null : dt;
+};
+
+// Uniform field wrapper (label + error + children)
+function Field({
+  label,
+  error,
+  children,
+  mb = spacing.sm,
+}: {
+  label: string;
+  error?: string | null;
+  children: React.ReactNode;
+  mb?: number;
+}) {
+  return (
+    <View style={{ marginBottom: mb }}>
+      <Text
+        weight="semibold"
+        color={colors.textPrimary}
+        style={{ fontSize: fontSizes.sm, marginBottom: 6 }}
+      >
+        {label}
+      </Text>
+      {children}
+      {!!error && (
+        <Text color={colors.error} style={{ fontSize: fontSizes.sm, marginTop: 4 }}>
+          {error}
+        </Text>
+      )}
+    </View>
+  );
 }
 
 export default function EditProfileScreen() {
   const {
     name,
-    setName,
+    email,
     phoneNumber,
-    setPhoneNumber,
     phoneCountryCode,
+    dob,
     gender,
+    setName,
+    setEmail,
+    setDob,
     setGender,
-    dob, // Date | null
-    setDob, // Dispatch<SetStateAction<Date | null>>
-    avatarKey,
-    setAvatarKey,
-    preferredLang,
     saving,
     errors,
+    canSave,
     save,
   } = useEditProfileForm();
 
-  const initial = (name || 'User').trim().charAt(0).toUpperCase();
+  const phoneCombined = [phoneCountryCode, phoneNumber].filter(Boolean).join(' ') || '';
+
+  const inputStyle = (err?: boolean) => ({
+    height: 44,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: err ? colors.error : colors.border,
+    backgroundColor: colors.card,
+    paddingHorizontal: spacing.md,
+    color: colors.text,
+    fontSize: fontSizes.md,
+    lineHeight: lineHeights.md,
+  });
 
   return (
-    // Header shown by stack → let it handle the top inset
     <Screen safe={false} padded={false}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -58,121 +91,68 @@ export default function EditProfileScreen() {
           contentInsetAdjustmentBehavior="never"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: spacing.md, paddingBottom: spacing.xl }}
+          contentContainerStyle={{
+            paddingTop: spacing.md,
+            paddingBottom: spacing.xl,
+            paddingHorizontal: spacing.md,
+          }}
         >
-          {/* Constrain width on tablets for nicer reading */}
-          <View
-            style={{
-              alignSelf: 'center',
-              width: '100%',
-              maxWidth: contentWidth.max, // ← FIX: use numeric value
-              paddingHorizontal: spacing.md,
-            }}
-          >
-            {/* Avatar */}
-            <AvatarChooserSheet value={avatarKey} onChange={setAvatarKey} nameInitial={initial} />
-
-            {/* Name */}
-            <View style={{ marginTop: spacing.xs }}>
-              <Text
-                weight="semibold"
-                color={colors.textPrimary}
-                style={{ fontSize: fontSizes.sm, marginBottom: spacing.xs }}
-              >
-                Name
-              </Text>
-
+          <View style={{ width: '100%', maxWidth: contentWidth?.max ?? 720, alignSelf: 'center' }}>
+            <Field label="Name" error={errors.name}>
               <TextInput
                 value={name}
                 onChangeText={setName}
                 placeholder="Your full name"
-                placeholderTextColor={colors.textMuted}
-                style={{
-                  height: 44,
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.card,
-                  paddingHorizontal: spacing.md,
-                  color: colors.text,
-                  fontSize: fontSizes.md,
-                  lineHeight: lineHeights.md,
-                }}
-                autoCapitalize="words"
                 autoCorrect
-                returnKeyType="done"
+                style={inputStyle(!!errors.name)}
               />
+            </Field>
 
-              {/* reserved error slot */}
-              <View style={{ minHeight: fontSizes.sm + spacing.xs, marginTop: spacing.xs }}>
-                {errors.name ? (
-                  <Text color={colors.error} style={{ fontSize: fontSizes.sm }}>
-                    {errors.name}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-
-            {/* Phone */}
-            <PhoneRow
-              countryCode={phoneCountryCode}
-              phone={phoneNumber}
-              setPhone={setPhoneNumber}
-              error={errors.phone}
-            />
-
-            {/* DOB (DobField expects "DD-MM-YYYY" string) */}
-            <DobField
-              value={dateToDDMMYYYY(dob)} // ← FIX: convert Date -> string
-              onChange={(s) => setDob(ddmmyyyyToDate(s))} // ← FIX: convert string -> Date
-              error={errors.dob}
-            />
-
-            {/* Gender */}
-            <GenderPicker value={gender} onChange={setGender} error={errors.gender} />
-
-            {/* Preferred language (read-only) */}
-            <View style={{ marginTop: spacing.lg }}>
-              <Text
-                weight="semibold"
-                color={colors.textPrimary}
-                style={{ fontSize: fontSizes.sm, marginBottom: spacing.xs }}
-              >
-                Preferred language
-              </Text>
-
+            <Field label="Email" error={errors.email}>
               <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={inputStyle(!!errors.email)}
+              />
+            </Field>
+
+            <Field label="Phone">
+              <TextInput
+                value={phoneCombined}
                 editable={false}
-                value={
-                  {
-                    en: 'English',
-                    hi: 'Hindi',
-                    te: 'Telugu',
-                    ta: 'Tamil',
-                    kn: 'Kannada',
-                    ml: 'Malayalam',
-                    mr: 'Marathi',
-                    bn: 'Bengali',
-                  }[(preferredLang || 'en').toLowerCase()] || 'English'
-                }
                 style={{
-                  height: 44,
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.card,
-                  paddingHorizontal: spacing.md,
-                  color: colors.textSecondary,
-                  fontSize: fontSizes.md,
-                  lineHeight: lineHeights.md,
-                  opacity: 0.9,
+                  ...inputStyle(false),
+                  backgroundColor: colors.surface,
+                  color: colors.textMuted,
                 }}
               />
-            </View>
+            </Field>
 
-            {/* Actions */}
-            <View style={{ marginTop: spacing.xl }}>
-              <Button title="Save changes" onPress={save} loading={saving} disabled={saving} />
+            <Field label="Gender" error={errors.gender}>
+              <GenderPicker
+                value={(gender ?? '') as '' | 'male' | 'female'}
+                onChange={(g: 'male' | 'female') => setGender(g)}
+                hasError={!!errors.gender}
+                style={{ marginTop: 0 }}
+              />
+            </Field>
+
+            <Field label="Date of birth" error={errors.dob}>
+              <DobField
+                value={dateToDDMMYYYY(dob)}
+                onChange={(s) => setDob(ddmmyyyyToDate(s))}
+                hasError={!!errors.dob}
+                style={{ marginTop: 0 }}
+              />
+            </Field>
+
+            <View style={{ marginTop: spacing.md }}>
+              <Button title="Save changes" onPress={save} loading={saving} disabled={!canSave} />
             </View>
           </View>
         </ScrollView>

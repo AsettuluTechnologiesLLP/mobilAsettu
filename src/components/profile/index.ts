@@ -1,5 +1,3 @@
-export { ProfileHeader } from './ProfileHeader';
-
 // If ProfileRow is a default export in its file:
 export { default as ProfileRow } from './ProfileRow';
 

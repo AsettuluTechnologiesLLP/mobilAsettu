@@ -6,7 +6,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { getApiErrorMessage } from './error';
 
 /** ───────── Config ───────── **/
-const API_URL = 'http://192.168.1.23:8080/api';
+const API_URL = 'http://192.168.1.5:8080/api';
 const TIMEOUT_DURATION = 10_000;
 const AUTH_WHITELIST = ['/auth/sendotp', '/auth/verifyotp', '/auth/refreshtoken'];
 const USE_BEARER = true;

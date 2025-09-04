@@ -2,7 +2,9 @@
 import { Text } from '@ui';
 import { colors, fontSizes, lineHeights, radii, spacing } from '@ui/tokens';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import InfoTile from '@/ui/primitives/InfoTile'; // or relative: '../../../ui/tiles/InfoTile'
 
 import { HouseholdListItem } from '../model/households';
 
@@ -27,38 +29,36 @@ export function HouseholdTile({
   } = item;
 
   const ownershipLabel = viewerOwnershipLabel(isUserOwner, propertyOwnershipStatus);
+  const chips = [
+    ownershipLabel ? `Property: ${ownershipLabel}` : null,
+    occupancyStatus || null,
+    householdType || null,
+  ].filter(Boolean) as string[];
 
   return (
-    <TouchableOpacity activeOpacity={0.9} onPress={() => onPress(id)}>
-      <View style={styles.card}>
-        {/* Header row */}
-        <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>
-            {name}
-          </Text>
-          <View style={styles.headerRight}>
-            <RolePill role={myRole} />
-            <MemberCluster count={memberCount || 0} />
-          </View>
+    <InfoTile
+      title={name}
+      subtitle={compactAddress(addressLine, city)}
+      right={
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <RolePill role={myRole} />
+          <MemberCluster count={memberCount || 0} />
         </View>
-
-        {/* Address */}
-        <Text style={styles.address} numberOfLines={1}>
-          {compactAddress(addressLine, city)}
-        </Text>
-
-        {/* Pins: centered; property label adapted for non-owners */}
-        <View style={styles.chipsRow}>
-          {ownershipLabel ? <Chip label={`Property: ${ownershipLabel}`} /> : null}
-          {occupancyStatus ? <Chip label={occupancyStatus} /> : null}
-          {householdType ? <Chip label={householdType} /> : null}
-        </View>
-      </View>
-    </TouchableOpacity>
+      }
+      chips={chips}
+      onPress={() => onPress(id)}
+      // Optional: tweak TileMaster defaults per screen
+      tileProps={
+        {
+          // headerBg, bodyBg, footerBg, dividerHB, dividerBF, fullBleed, sectionPadding…
+        }
+      }
+      style={styles.cardOverride}
+    />
   );
 }
 
-/* ---------- Subcomponents ---------- */
+/* ---------- Reuse your subcomponents ---------- */
 
 function RolePill({ role }: { role: string }) {
   return (
@@ -103,17 +103,6 @@ function MemberCluster({ count }: { count: number }) {
   );
 }
 
-/** Unified pill style (like Role, a tad smaller/softer) */
-function Chip({ label }: { label: string }) {
-  return (
-    <View style={chipStyles.wrap}>
-      <Text style={chipStyles.txt} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 /* ---------- Helpers ---------- */
 
 function compactAddress(line?: string, city?: string) {
@@ -133,54 +122,25 @@ function viewerOwnershipLabel(
   if (!propertyLabel) return null;
   const v = propertyLabel.trim().toLowerCase();
   if (isOwner) return propertyLabel;
-  // Non-owner view:
   if (v === 'owned') return 'Rented';
-  return propertyLabel; // already 'Rented' or something else from BE
+  return propertyLabel;
 }
 
-/* ---------- Styles ---------- */
-
-const BORDER = colors.border;
-// const CARD_BG = '#F5F7FB';
+/* ---------- Optional per-screen overrides ---------- */
 
 const styles = StyleSheet.create({
-  card: {
-    padding: spacing.sm, // tighter padding
-    borderRadius: radii.sm,
+  cardOverride: {
+    // If you want to keep the old look:
     backgroundColor: colors.tileBackground,
+    borderColor: colors.border,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderRadius: radii.sm,
+    padding: spacing.sm,
     marginBottom: spacing.md,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  title: {
-    flex: 1,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  address: {
-    fontSize: fontSizes.md,
-    lineHeight: lineHeights.md,
-    color: colors.textSecondary,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
 });
+
+const BORDER = colors.border;
 
 const pillStyles = StyleSheet.create({
   wrap: {
@@ -230,25 +190,6 @@ const memberStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   countTxt: {
-    fontSize: fontSizes.xs,
-    lineHeight: lineHeights.xs,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-});
-
-const chipStyles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: colors.badgeBg,
-    marginRight: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  txt: {
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: '700',

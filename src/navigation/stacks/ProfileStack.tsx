@@ -6,7 +6,6 @@ import {
 } from '@react-navigation/native-stack';
 import ManageAssetsScreen from '@screens/Asetts/ManageAssetsScreen';
 import HouseholdDetailsScreen from '@screens/Households/HouseholdDetailsScreen';
-import ManageMembersScreen from '@screens/Households/ManageHouseholdMembersScreen';
 import ManageHouseholdsScreen from '@screens/Households/ManageHouseholdsScreen';
 import AboutAsettuScreen from '@screens/Profile/AboutAsettuScreen';
 import EditProfileScreen from '@screens/Profile/EditProfileScreen';
@@ -80,11 +79,6 @@ export default function ProfileStackNavigator() {
         name={ROUTES.MANAGE_HOUSEHOLD_DETAILS}
         component={HouseholdDetailsScreen}
         options={{ title: 'Household Details' }}
-      />
-      <Stack.Screen
-        name={ROUTES.MANAGE_MEMBERS}
-        component={ManageMembersScreen}
-        options={{ title: 'My Members' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_ASSETS}

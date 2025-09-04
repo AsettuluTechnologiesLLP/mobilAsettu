@@ -7,44 +7,18 @@ import { Button, Screen, Text } from '@ui';
 import { colors, spacing } from '@ui/tokens';
 import logger from '@utils/logger';
 import React from 'react';
-import { ActivityIndicator, Alert, FlatList, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
-import HouseholdTile from './components/HouseholdTile';
-import useHouseholdsViewAll, {
-  HouseholdListItem as HookHouseholdListItem,
-} from './hooks/useHouseholdsViewAll';
-import type { HouseholdListItem as TileItem } from './model/households';
+import HouseholdTilesList from './components/HouseholdTilesList'; // ← new list
+import useHouseholdsViewAll from './hooks/useHouseholdsViewAll';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, typeof ROUTES.MANAGE_HOUSEHOLDS>;
 
-/** Map the hook's item shape to the tile's model shape */
-function toTileItem(h: HookHouseholdListItem): TileItem {
-  const role = (h.myRole || '').toUpperCase();
-
-  return {
-    id: h.id,
-    name: h.name || '',
-    ownerDisplayName: h.ownerName || '',
-    addressLine: h.address || '',
-    city: h.city || '',
-    myRole: h.myRole || 'MEMBER',
-    isUserOwner: role === 'PRIMARY OWNER' || role === 'OWNER',
-
-    // Optional fields: provide safe fallbacks
-    memberCount: (h as any).memberCount ?? 0,
-    propertyOwnershipStatus: (h as any).propertyOwnershipStatus ?? null,
-    occupancyStatus: (h as any).occupancyStatus ?? null,
-    householdType: (h as any).householdType ?? null,
-    updatedAt: null,
-  };
-}
-
 export default function ManageHouseholdsScreen() {
   const navigation = useNavigation<Nav>();
-  const { households, loading, error } = useHouseholdsViewAll(); // unchanged
+  const { households, loading, error } = useHouseholdsViewAll();
 
   const goToCreate = () => {
-    // navigation.navigate(ROUTES.CREATE_HOUSEHOLD);
     Alert.alert('Coming soon', 'Create Household screen is not wired yet.');
   };
 
@@ -60,28 +34,8 @@ export default function ManageHouseholdsScreen() {
     });
   };
 
-  const renderItem = ({ item }: { item: HookHouseholdListItem }) => {
-    const tileItem = toTileItem(item);
-
-    return (
-      <HouseholdTile
-        item={tileItem}
-        onPress={(id) =>
-          onTilePress(id, {
-            name: tileItem.name,
-            address: tileItem.addressLine,
-            city: tileItem.city,
-            myRole: tileItem.myRole,
-          })
-        }
-      />
-    );
-  };
-
   return (
-    // Let native header handle top inset; no default padding
     <Screen safe={false} padded={false}>
-      {/* Tiny custom padding so the first card doesn't touch the header */}
       <View
         style={{
           paddingTop: spacing.sm,
@@ -108,16 +62,11 @@ export default function ManageHouseholdsScreen() {
           </View>
         ) : (
           <>
-            <FlatList
+            {/* ✅ New list renders all tiles */}
+            <HouseholdTilesList
               data={households}
-              keyExtractor={(it) => it.id}
-              renderItem={renderItem}
-              bounces={false}
-              alwaysBounceVertical={false}
-              overScrollMode="never"
-              contentInsetAdjustmentBehavior="never"
-              contentContainerStyle={{ paddingBottom: spacing.xl }}
-              showsVerticalScrollIndicator={false}
+              onPress={(id, seed) => onTilePress(id, seed)}
+              contentBottomPadding={spacing.xl}
             />
 
             <View style={{ marginTop: spacing.md }}>

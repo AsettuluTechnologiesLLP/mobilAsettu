@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { viewHouseholds, ViewHouseholdsResponse } from '@services/api';
 import logger from '@utils/logger';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export type HouseholdListItem = {
   id: string;
@@ -10,8 +10,6 @@ export type HouseholdListItem = {
   address: string;
   city: string;
   myRole: string;
-
-  // Optional richer fields the BE may return
   ownerDisplayName?: string | null;
   addressLine?: string | null;
   isUserOwner?: boolean | null;
@@ -23,24 +21,23 @@ export type HouseholdListItem = {
 };
 
 const toInt = (v: any): number | null => {
-  if (v === null || v === undefined) return null;
+  if (v == null) return null;
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   const n = parseInt(String(v), 10);
   return Number.isNaN(n) ? null : n;
 };
-
 const toBool = (v: any): boolean | null => {
-  if (v === null || v === undefined) return null;
+  if (v == null) return null;
   if (typeof v === 'boolean') return v;
   const s = String(v).toLowerCase();
-  if (s === 'true' || s === 't' || s === '1') return true;
-  if (s === 'false' || s === 'f' || s === '0') return false;
+  if (['true', 't', '1'].includes(s)) return true;
+  if (['false', 'f', '0'].includes(s)) return false;
   return null;
 };
 
 export default function useHouseholdsViewAll() {
   const [households, setHouseholds] = useState<HouseholdListItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,26 +51,19 @@ export default function useHouseholdsViewAll() {
         city: h.household_city ?? '',
         myRole: h.my_role ?? '',
       };
-
-      // Enriched (coerced)
       const roleUpper = String(base.myRole || '').toUpperCase();
-
       base.ownerDisplayName = h.owner_display_name ?? base.ownerName ?? null;
       base.addressLine = h.household_address ?? h.address_line_1 ?? base.address ?? null;
-
       const isUserOwnerFromApi = toBool(h.is_user_owner);
       base.isUserOwner =
         isUserOwnerFromApi !== null
           ? isUserOwnerFromApi
           : roleUpper === 'PRIMARY OWNER' || roleUpper === 'OWNER';
-
-      base.memberCount = toInt(h.member_count); // ← fixes “always 0”
-
+      base.memberCount = toInt(h.member_count);
       base.propertyOwnershipStatus = h.property_ownership_status ?? null;
       base.occupancyStatus = h.occupancy_status ?? null;
       base.householdType = h.household_type ?? null;
       base.updatedAt = h.updated_at ?? null;
-
       return base;
     });
 
@@ -113,14 +103,12 @@ export default function useHouseholdsViewAll() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
+  // ✅ single source of truth: fetch when screen is focused
   useFocusEffect(
     useCallback(() => {
-      if (!loading) refresh();
-    }, [loading, refresh]),
+      load();
+      return () => {}; // optional: cancel in-flight request if you add abort logic
+    }, [load]),
   );
 
   return { households, loading, refreshing, error, load, refresh };

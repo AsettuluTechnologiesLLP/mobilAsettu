@@ -4,6 +4,14 @@
 
 export type MyRole = 'PRIMARY OWNER' | 'OWNER' | 'TENANT' | 'MEMBER' | 'VIEWER' | string;
 
+export const withViewerOwnership = (
+  raw: string | null | undefined,
+  isOwner: boolean,
+): string | null => {
+  if (!raw) return null;
+  return !isOwner && raw.trim().toLowerCase() === 'owned' ? 'Rented' : raw;
+};
+
 /** Raw row from BE list endpoint (/household/viewhouseholds or equivalent). */
 export interface HouseholdSummaryDTO {
   household_id: string;
@@ -58,69 +66,75 @@ export const toHouseholdListItem = (dto: HouseholdSummaryDTO): HouseholdListItem
 /** Map array of summary DTOs to UI list items. */
 export const mapHouseholdSummary = (rows?: HouseholdSummaryDTO[] | null): HouseholdListItem[] =>
   rows ? rows.map(toHouseholdListItem) : [];
+/** ---------- DETAILS (page) ---------- */
 
-// ============ DETAILS (full view payload) ============
-
-export type MemberStatus = 'ACTIVE' | 'REMOVED' | 'LEFT' | 'INVITED' | string;
-
-export interface HouseholdMemberDTO {
+export interface MemberDTO {
   userId: string;
   name: string;
-  role: MyRole;
-  status: MemberStatus;
-}
-
-export interface PermissionsDTO {
-  canEdit: boolean;
-  canInvite: boolean;
-  canRemoveMembers: boolean;
-  canTransferOwnership: boolean;
-  canDeleteHousehold: boolean;
-  canLeave: boolean;
+  role: string;
+  status: string; // 'ACTIVE' | 'INVITED' | 'REMOVED' | ...
+  // forward-compatible fields if BE adds them later:
+  canRemove?: boolean;
+  allowedRoles?: string[];
+  phone?: string | null;
 }
 
 export interface RefsDTO {
   occupancyOptions: string[];
   typeOptions: string[];
   ownershipOptions: string[];
+  /** NEW: renamed to match BE column `member_role_options` */
+  memberRoleOptions: string[];
+  memberStatusOptions: string[];
+  /**
+   * Viewer-aware roles allowed for inviting via “+”.
+   * Optional to avoid compile breaks if BE temporarily omits it.
+   */
+  inviteRoleOptions?: string[];
 }
 
-/** Exact shape returned by the details endpoint/service. */
 export interface HouseholdDetailDTO {
   id: string;
   name: string;
+
   owner: { name: string | null; phone: string | null };
+
   address: { line1: string; city: string; state: string; pincode: string };
+
   statuses: {
-    /** Raw labels from DB */
+    /** raw DB label (e.g., "Owned" | "Rented") */
     propertyOwnership: string | null;
     occupancy: string | null;
     type: string | null;
     /**
-     * Viewer lens: if user is NOT owner and raw is "Owned" -> "Rented".
-     * Backend sets this; FE also ensures via helper below.
+     * What non-owners should see for ownership at a glance.
+     * (Server already maps Owned→Rented for non-owners.)
      */
     viewerPropertyOwnership: string | null;
   };
-  members: HouseholdMemberDTO[];
+
+  members: MemberDTO[];
+
   counts: {
     membersActive: number;
     ownersActive: number;
     otherOwnersActive: number;
   };
-  my: { role: MyRole; isOwner: boolean; membershipStatus: MemberStatus };
-  permissions: PermissionsDTO;
-  refs: RefsDTO;
-  updatedAt: string | null;
-  version: string | null; // optimistic token (often same as updatedAt)
-}
 
-/** Safety-normalizer: guarantee viewerPropertyOwnership is populated. */
-export const withViewerOwnership = (d: HouseholdDetailDTO): HouseholdDetailDTO => {
-  if (!d?.statuses) return d;
-  const raw = (d.statuses.propertyOwnership || '').toLowerCase();
-  const viewer =
-    d.statuses.viewerPropertyOwnership ??
-    (!d.my.isOwner && raw === 'owned' ? 'Rented' : d.statuses.propertyOwnership);
-  return { ...d, statuses: { ...d.statuses, viewerPropertyOwnership: viewer } };
-};
+  my: { role: string; isOwner: boolean; membershipStatus: string };
+
+  permissions: {
+    canEdit: boolean;
+    canInvite: boolean;
+    canRemoveMembers: boolean;
+    canTransferOwnership: boolean;
+    canDeleteHousehold: boolean;
+    canLeave: boolean;
+  };
+
+  refs: RefsDTO;
+
+  updatedAt: string | null;
+  /** Optimistic concurrency token (currently same as updatedAt) */
+  version: string | null;
+}

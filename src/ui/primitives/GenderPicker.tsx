@@ -1,28 +1,30 @@
-// src/components/profile/GenderPicker.tsx
-import forms from '@ui/primitives/forms';
+import forms from '@ui/primitives/forms'; // keep your existing input styles
 import React, { useState } from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleProp, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 type Props = {
-  label?: string;
-  value: string;
+  value: '' | 'male' | 'female'; // '' shows "Select"
   onChange: (val: 'male' | 'female') => void;
-  error?: string;
+  style?: StyleProp<ViewStyle>; // parent controls spacing
+  hasError?: boolean; // draw red border if true
 };
 
-export default function GenderPicker({ label = 'Gender', value, onChange, error }: Props) {
+export default function GenderPicker({ value, onChange, style, hasError = false }: Props) {
   const [open, setOpen] = useState(false);
-
   const display = value ? value[0].toUpperCase() + value.slice(1) : 'Select';
 
   return (
-    <View style={forms.fieldGroup}>
-      <Text style={forms.label}>{label}</Text>
-
-      <TouchableOpacity onPress={() => setOpen(true)} activeOpacity={0.7} style={forms.touchInput}>
+    <View style={style}>
+      <TouchableOpacity
+        onPress={() => setOpen(true)}
+        activeOpacity={0.7}
+        style={[
+          forms.touchInput,
+          hasError && { borderColor: '#EF4444' }, // colors.error
+        ]}
+      >
         <Text style={forms.touchInputText}>{display}</Text>
       </TouchableOpacity>
-      {error ? <Text style={forms.error}>{error}</Text> : null}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <TouchableOpacity

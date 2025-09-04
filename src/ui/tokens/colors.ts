@@ -48,6 +48,7 @@ export const colors = {
   primaryTextOn: palette.white,
 
   // Surfaces
+  surface: palette.white,
   card: palette.white,
   tile: palette.white,
 
