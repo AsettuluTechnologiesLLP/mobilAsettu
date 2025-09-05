@@ -9,7 +9,7 @@ import logger from '@utils/logger';
 import React from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 
-import HouseholdTilesList from './components/HouseholdTilesList'; // ← new list
+import HouseholdTilesList from './components/HouseholdTilesList';
 import useHouseholdsViewAll from './hooks/useHouseholdsViewAll';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, typeof ROUTES.MANAGE_HOUSEHOLDS>;

@@ -13,9 +13,9 @@ export type HHItem = {
   myRole?: string | null;
   isUserOwner?: boolean | null;
   memberCount?: number | null;
-  propertyOwnershipStatus?: string | null; // 'Owned' / 'Rented' / etc.
-  occupancyStatus?: string | null; // 'Vacant' / 'Occupied' / 'Self Occupied'
-  householdType?: string | null; // 'Home' / 'Individual' / 'Flat' / 'Plot' / 'Apartment'
+  propertyOwnershipStatus?: string | null;
+  occupancyStatus?: string | null;
+  householdType?: string | null;
 };
 
 export default function HouseholdTilesList({
@@ -62,18 +62,11 @@ const TileRow = memo(function TileRow({
   ) => void;
 }) {
   const role = (item.myRole || 'MEMBER').toUpperCase();
-  const isOwner = role === 'PRIMARY OWNER' || role === 'OWNER';
   const title = item.name || '';
   const subtitle = compactAddress(item.address, item.city);
 
-  // Property label transformed for non-owners (Owned → Rented), but no "Property:" prefix
-  const property = ownershipLabelForViewer(isOwner, item.propertyOwnershipStatus);
-
-  // Member count: number only
-  const count = Math.max(0, toInt(item.memberCount) ?? 0);
-
-  // Chips: property, occupancy, type (non-empty only)
-  const chips = [property, item.occupancyStatus, item.householdType].filter(Boolean) as string[];
+  // Chips: ONLY occupancy + type (omit property & member count)
+  const chips = [item.occupancyStatus, item.householdType].filter(Boolean) as string[];
 
   return (
     <TouchableOpacity
@@ -95,7 +88,6 @@ const TileRow = memo(function TileRow({
           </Text>
           <View style={S.headerRight}>
             <Pill label={role} />
-            <CountPill value={count} style={{ marginLeft: spacing.xs }} />
           </View>
         </View>
 
@@ -106,7 +98,7 @@ const TileRow = memo(function TileRow({
           </Text>
         )}
 
-        {/* Chips row */}
+        {/* Chips row (only occupancy + type) */}
         {chips.length > 0 && (
           <View style={S.chipsRow}>
             {chips.map((c, i) => (
@@ -135,17 +127,6 @@ function Pill({ label, style }: { label: string; style?: any }) {
   );
 }
 
-function CountPill({ value, style }: { value: number; style?: any }) {
-  // Compact numeric badge (no "Members" suffix)
-  return (
-    <View style={[S.countPill, style]}>
-      <Text style={S.countTxt} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 /* ------------------------------ Helpers ------------------------------ */
 
 function compactAddress(line?: string | null, city?: string | null) {
@@ -154,25 +135,6 @@ function compactAddress(line?: string | null, city?: string | null) {
   if (!a && !c) return '';
   if (a && c) return `${a}, ${c}`;
   return a || c;
-}
-
-/**
- * If user is NOT owner and property is "Owned" -> show "Rented".
- * Otherwise show the backend label as-is (Owned / Rented / etc).
- */
-function ownershipLabelForViewer(isOwner: boolean, propertyLabel?: string | null): string | null {
-  if (!propertyLabel) return null;
-  const v = propertyLabel.trim().toLowerCase();
-  if (isOwner) return propertyLabel;
-  if (v === 'owned') return 'Rented';
-  return propertyLabel;
-}
-
-function toInt(v: any): number | null {
-  if (v === null || v === undefined) return null;
-  if (typeof v === 'number' && Number.isFinite(v)) return v;
-  const n = parseInt(String(v), 10);
-  return Number.isNaN(n) ? null : n;
 }
 
 /* -------------------------------- Styles ----------------------------- */
@@ -216,23 +178,6 @@ const S = StyleSheet.create({
     justifyContent: 'center',
   },
   pillTxt: {
-    fontSize: fontSizes.xs,
-    lineHeight: lineHeights.xs,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  countPill: {
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    backgroundColor: colors.badgeBg,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: BORDER,
-    minWidth: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countTxt: {
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: '700',

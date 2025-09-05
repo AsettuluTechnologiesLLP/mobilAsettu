@@ -19,7 +19,6 @@ export default function HouseholdDetailsScreen() {
 
   const { data, loading, refreshing, error, refresh } = useHouseholdView(householdId);
 
-  // Map backend members -> MembersTile shape
   const members: Member[] = (data?.members ?? []).map((m: any) => ({
     id: m.id ?? m.memberId ?? String(m.phone ?? Math.random()),
     name: m.name ?? m.displayName ?? m.phone ?? 'Member',
@@ -30,7 +29,6 @@ export default function HouseholdDetailsScreen() {
 
   const canInvite = !!data?.permissions?.canInvite;
 
-  // Add member from MembersTile (UI calls this with phone + role)
   const handleAddFromTile = useCallback(
     async ({ phone, role }: { phone: string; role: string }) => {
       try {
@@ -81,18 +79,12 @@ export default function HouseholdDetailsScreen() {
           </View>
         ) : (
           <>
-            {/* Members tile */}
             <MembersTile
               title="Members"
               members={members}
               canEdit={canInvite}
               onAdd={handleAddFromTile}
-              // You can wire these later:
-              // onDelete={(memberId) => {}}
-              // onChangeRole={(memberId, role) => {}}
             />
-
-            {/* Add other tiles below (Address, Documents, etc.) */}
           </>
         )}
       </ScrollView>
