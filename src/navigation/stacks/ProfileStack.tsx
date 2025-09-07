@@ -5,6 +5,7 @@ import {
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
 import ManageAssetsScreen from '@screens/Asetts/ManageAssetsScreen';
+import AddHouseholdScreen from '@screens/Households/AddHouseholdScreen';
 import HouseholdDetailsScreen from '@screens/Households/HouseholdDetailsScreen';
 import ManageHouseholdsScreen from '@screens/Households/ManageHouseholdsScreen';
 import AboutAsettuScreen from '@screens/Profile/AboutAsettuScreen';
@@ -19,22 +20,18 @@ export type ProfileStackParamList = {
   [ROUTES.EDIT_PROFILE]: undefined;
   [ROUTES.ABOUT_ASETTU]: undefined;
 
-  [ROUTES.MANAGE_HOUSEHOLDS]: undefined;
+  [ROUTES.MANAGE_HOUSEHOLDS]: { removedId?: string; refreshAt?: number } | undefined;
   [ROUTES.MANAGE_MEMBERS]: undefined;
   [ROUTES.MANAGE_ASSETS]: undefined;
   [ROUTES.MANAGE_SERVICE_REQUESTS]: undefined;
 
   [ROUTES.MANAGE_HOUSEHOLD_DETAILS]: {
     householdId: string;
-    seed?: {
-      name?: string;
-      address?: string;
-      city?: string;
-      myRole?: string;
-    };
-    /** UI may set an initial mode; final permissions still come from API */
+    seed?: { name?: string; address?: string; city?: string; myRole?: string };
     mode?: 'view' | 'edit';
   };
+
+  [ROUTES.ADD_HOUSEHOLD]: undefined; // ← add this
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -79,6 +76,11 @@ export default function ProfileStackNavigator() {
         name={ROUTES.MANAGE_HOUSEHOLD_DETAILS}
         component={HouseholdDetailsScreen}
         options={{ title: 'Household Details' }}
+      />
+      <Stack.Screen
+        name={ROUTES.ADD_HOUSEHOLD}
+        component={AddHouseholdScreen}
+        options={{ title: 'Add Household' }}
       />
       <Stack.Screen
         name={ROUTES.MANAGE_ASSETS}

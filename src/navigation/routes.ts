@@ -29,6 +29,7 @@ const ROUTES = {
   MANAGE_HOUSEHOLDS: 'ManageHouseholds',
   MANAGE_HOUSEHOLD_DETAILS: 'HouseholdDetails',
   MANAGE_MEMBERS: 'ManageMembers',
+  ADD_HOUSEHOLD: 'AddHousehold',
 
   // Asetts
   MANAGE_ASSETS: 'ManageAssets',

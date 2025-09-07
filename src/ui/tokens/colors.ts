@@ -18,7 +18,7 @@ export const palette = {
   secondary: '#4B5563',
   secondaryAlt: '#9CA3AF',
 
-  // Action (kept for legacy; not used for primary button anymore)
+  // Action (legacy; not used for primary anymore)
   blue600: '#2563EB',
 
   // States
@@ -26,8 +26,13 @@ export const palette = {
   amber600: '#D97706',
   red600: '#DC2626',
 
-  danger: '#DC2626', // used for error text, toasts, etc.
-  badgeBg: '#EEF2FF', // subtle tag/chip background
+  // Danger + tags
+  danger: '#DC2626',
+  dangerBg: '#FEF2F2',
+  dangerBorder: '#FCA5A5',
+
+  // Badge
+  badgeBg: '#EEF2FF',
 } as const;
 
 export const colors = {
@@ -45,7 +50,7 @@ export const colors = {
   // Semantic primaries
   primary: palette.primary,
   primaryAlt: palette.primaryAlt,
-  primaryTextOn: palette.white,
+  primaryTextOn: palette.white, // text color when background is primary
 
   // Surfaces
   surface: palette.white,
@@ -55,26 +60,38 @@ export const colors = {
   // States
   error: palette.red600,
   success: palette.green600,
+  warning: palette.amber600,
 
-  // Monochrome CTA
-  buttonBackground: palette.black, // ← was blue; now black
-  buttonTextOn: palette.white, // label color for primary
+  // Buttons / CTAs
+  buttonBackground: palette.black, // main CTA background
+  buttonTextOn: palette.white, // CTA text color
+  onPrimary: palette.white, // alias for text on primary backgrounds
 
-  // Minimal accent (kept for back-compat; set to black to stay mono)
+  // Minimal accent
   accent: palette.black,
 
-  // Convenience alias (kept)
+  // Text convenience
   text: palette.gray900,
+  muted: palette.gray500,
 
-  // Focus/selection/ripple (for inputs/buttons; removes blue focus)
+  // Focus/selection/ripple
   focus: palette.gray900,
   selection: palette.gray900,
   ripple: palette.gray200,
 
-  // --- ADD THESE ALIASES (used by screens) ---
+  // Danger / destructive actions
   danger: palette.danger,
+  dangerBg: palette.dangerBg,
+  dangerBorder: palette.dangerBorder,
+
+  // Badges
   badgeBg: palette.badgeBg,
+  badgeBgMuted: palette.gray50,
+  badgeText: palette.gray700,
 
   // HouseholdTile
   tileBackground: palette.gray50,
+
+  // Info / banners
+  infoBg: '#EEF2FF',
 } as const;

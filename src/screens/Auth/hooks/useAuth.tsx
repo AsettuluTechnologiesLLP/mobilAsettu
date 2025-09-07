@@ -15,6 +15,8 @@ type AuthContextType = {
   login: (tokens: { accessToken: string; refreshToken: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshIfNeeded: () => Promise<void>;
+  /** NEW: always a string; '' when unknown */
+  userId: string;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -54,10 +56,20 @@ function isAccessTokenValid(token: string) {
   return valid;
 }
 
+/** NEW: extract a best-effort user id from the access token payload */
+const extractUserId = (token?: string | null): string => {
+  if (!token) return '';
+  const p = decodeJwtPayload(token);
+  return (p?.sub || p?.userId || p?.uid || '') as string;
+};
+
 // ─────────────────────────────── component ───────────────────────────────
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('checking');
+  /** NEW: user id state synced with current access token */
+  const [userId, setUserId] = useState<string>('');
 
+  // If any API call returns 401 via your client, this will be invoked.
   useEffect(() => {
     setUnauthorizedHandler(() => {
       logout();
@@ -75,14 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ]);
 
     setAuthTokens({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    setUserId(extractUserId(tokens.accessToken)); // ← NEW
+    logger.debug('[useAuth] login(): tokens saved', {
+      access: mask(tokens.accessToken),
+      refresh: mask(tokens.refreshToken),
+    });
     setStatus('authenticated');
   }, []);
 
   const logout = useCallback(async () => {
     logger.debug('[useAuth] logout(): clearing tokens');
     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
-
     setAuthTokens(null);
+    setUserId(''); // ← NEW
     setStatus('unauthenticated');
   }, []);
 
@@ -100,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (access && isAccessTokenValid(access)) {
         setAuthTokens({ accessToken: access, refreshToken: refresh });
+        setUserId(extractUserId(access)); // ← NEW
         logger.debug('[useAuth] refreshIfNeeded(): access valid → no refresh');
         return;
       }
@@ -107,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!refresh) {
         logger.debug('[useAuth] refreshIfNeeded(): no refresh token → unauthenticated');
         setAuthTokens(null);
+        setUserId(''); // ← NEW
         setStatus('unauthenticated');
         return;
       }
@@ -119,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await AsyncStorage.setItem('refreshToken', res.refreshToken);
         }
         setAuthTokens({ accessToken: res.accessToken, refreshToken: res.refreshToken ?? refresh });
-
+        setUserId(extractUserId(res.accessToken)); // ← NEW
         logger.debug('[useAuth] refreshIfNeeded(): Status → Authenticated');
         setStatus('authenticated');
       } else {
@@ -132,10 +151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logout]);
 
+  // Boot: show splash, then hydrate tokens → set status and userId accordingly
   useEffect(() => {
-    logger.debug('[useAuth] Splash Delay : ', {
-      splashMs: APP_CONFIG.SPLASH_DELAY_MS,
-    });
+    logger.debug('[useAuth] Splash Delay : ', { splashMs: APP_CONFIG.SPLASH_DELAY_MS });
 
     (async () => {
       try {
@@ -156,12 +174,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (access && isAccessTokenValid(access)) {
           setAuthTokens({ accessToken: access, refreshToken: refresh });
+          setUserId(extractUserId(access)); // ← NEW
           setStatus('authenticated');
           return;
         }
 
         if (refresh) {
-          logger.debug('[useAuth] Attempting refresh with existing refresh token');
           const res = await tryRefresh(refresh);
           if (res?.accessToken) {
             await AsyncStorage.setItem('accessToken', res.accessToken);
@@ -172,6 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               accessToken: res.accessToken,
               refreshToken: res.refreshToken ?? refresh,
             });
+            setUserId(extractUserId(res.accessToken)); // ← NEW
             setStatus('authenticated');
             return;
           }
@@ -179,45 +198,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setAuthTokens(null);
+        setUserId(''); // ← NEW
         setStatus('unauthenticated');
       } catch (e) {
         setAuthTokens(null);
+        setUserId(''); // ← NEW
         logger.error('[useAuth] Exception', e as any);
         setStatus('unauthenticated');
       }
     })();
+
     return () => {
       setUnauthorizedHandler(null);
     };
   }, []);
 
   const value = useMemo(
-    () => ({ status, login, logout, refreshIfNeeded }),
-    [status, login, logout, refreshIfNeeded],
+    () => ({ status, login, logout, refreshIfNeeded, userId }), // ← NEW
+    [status, login, logout, refreshIfNeeded, userId],
   );
 
-  logger.debug('[useAuth] Status : ', { status });
+  logger.debug('[useAuth] Status : ', { status, userId });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Public hook
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within <AuthProvider>');
   return ctx;
 }
 
+// ─────────────────────────── refresh helper ───────────────────────────
 async function tryRefresh(
   _refreshToken: string,
-): Promise<{ accessToken: string; refreshToken?: string | null } | null> {
+): Promise<{ accessToken: string; refreshToken?: string } | null> {
   try {
     const res = await refreshAccess(_refreshToken);
 
     const accessToken = (res as any).accessToken ?? (res as any).data?.accessToken ?? null;
     const newRefresh = (res as any).refreshToken ?? (res as any).data?.refreshToken ?? null;
 
-    if (res?.success && accessToken) {
-      return { accessToken, refreshToken: newRefresh };
+    if ((res as any)?.success && accessToken) {
+      return { accessToken, refreshToken: newRefresh ?? undefined };
     }
 
     logger.warn('⚠️ [useAuth] tryRefresh(): unsuccessful payload', res);
