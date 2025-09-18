@@ -18,7 +18,7 @@ import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } 
 import BasicDetailsCard from './components/BasicDetailsCard';
 import MembersCard from './components/MembersCard';
 import useHouseholdDetails from './hooks/useHouseholdDetails';
-// import { removeHouseholdFromCache } from './hooks/useHouseholdsViewAll';
+import { removeHouseholdFromCache } from './hooks/useHouseholdsViewAll';
 import { HouseholdData, UpdateBasicDetailsPayload } from './model/householdTypes';
 
 type Props = {
@@ -40,6 +40,7 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
   // Local UI state
   const [savingBasic, setSavingBasic] = useState(false);
   const [basicError, setBasicError] = useState<string | null>(null);
+  const [basicSavedCounter, setBasicSavedCounter] = useState(0);
 
   const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -150,6 +151,8 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
         }
 
         logger.info('HH:saveBasic:success', { householdId });
+        // Notify child card that save succeeded so it can exit edit mode
+        setBasicSavedCounter((c) => c + 1);
       } catch (e: any) {
         logger.error('HH:saveBasic:error', { error: e?.message });
         setBasicError(e?.message || 'Unable to save changes.');
@@ -331,12 +334,17 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
             });
             if (!resp?.success) throw new Error(resp?.message || 'Could not leave household');
             logger.info('HH:leave:success', { householdId, myUserId });
-            _navigation?.navigate({
-              name: ROUTES.MANAGE_HOUSEHOLDS,
-              params: { removedId: householdId },
-              merge: true,
-            } as any);
-            _navigation?.goBack?.();
+            try {
+              // Remove the household from the user's local list cache so the
+              // manage screen reflects the latest membership state immediately.
+              removeHouseholdFromCache(householdId);
+            } catch (e) {
+              /* continue regardless */
+            }
+
+            // Replace current screen with the list so the user lands on the
+            // refreshed Manage Households screen.
+            _navigation?.replace?.(ROUTES.MANAGE_HOUSEHOLDS, { removedId: householdId });
           } catch (e: any) {
             logger.error('HH:leave:error', { error: e?.message });
             setMembersError(e?.message || 'Could not leave household.');
@@ -366,7 +374,7 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
+              onPress: async () => {
             try {
               setDeleting(true);
               logger.info('HH:delete:start', { householdId });
@@ -374,12 +382,16 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
               const resp = await removeHousehold(householdId);
               if (!resp?.success) throw new Error(resp?.message || 'Failed to delete household');
               logger.info('HH:delete:success', { householdId });
-              _navigation?.navigate({
-                name: ROUTES.MANAGE_HOUSEHOLDS,
-                params: { removedId: householdId },
-                merge: true,
-              } as any);
-              _navigation?.goBack?.();
+                  // remove from local cache so list updates immediately
+                  try {
+                    removeHouseholdFromCache(householdId);
+                  } catch (e) {
+                    /* continue regardless */
+                  }
+
+                  // Replace current screen with the ManageHouseholds screen so the
+                  // user lands on the refreshed listing reliably.
+                  _navigation?.replace?.(ROUTES.MANAGE_HOUSEHOLDS, { removedId: householdId });
             } catch (e: any) {
               logger.error('HH:delete:error', { error: e?.message });
               Alert.alert('Delete failed', e?.message || 'Please try again.');
@@ -436,6 +448,7 @@ const HouseholdDetailsScreen: React.FC<Props> = ({ route, navigation: _navigatio
         saving={savingBasic}
         errorMessage={basicError}
         onSave={handleSaveBasic}
+        savedSignal={basicSavedCounter}
       />
 
       <MembersCard

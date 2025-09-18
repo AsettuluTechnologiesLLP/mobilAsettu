@@ -86,16 +86,25 @@ const AddHouseholdScreen: React.FC = () => {
 
       logger.info('[HHCreate] submit:success', { id: newId });
 
-      nav.navigate(ROUTES.MANAGE_HOUSEHOLD_DETAILS, {
-        householdId: newId,
-        seed: {
-          name: tile.name,
-          address: tile.address,
-          city: tile.city,
-          myRole: tile.myRole,
-        },
-        mode: 'edit',
-      });
+      // Inform the caller (Manage screen) about the created household so it can
+      // refresh and optionally navigate to details. Using goBack with params is
+      // the smallest, least-invasive change.
+      try {
+        nav.goBack?.({ createdId: newId });
+      } catch (e) {
+        // If navigation doesn't support goBack params in this environment,
+        // fall back to navigating to details directly.
+        nav.navigate(ROUTES.MANAGE_HOUSEHOLD_DETAILS, {
+          householdId: newId,
+          seed: {
+            name: tile.name,
+            address: tile.address,
+            city: tile.city,
+            myRole: tile.myRole,
+          },
+          mode: 'edit',
+        });
+      }
     } catch (e: any) {
       logger.error('[HHCreate] submit:error', e?.message);
       Alert.alert('Create Household failed', e?.message || 'Please try again.');

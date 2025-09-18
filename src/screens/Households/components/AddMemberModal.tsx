@@ -57,7 +57,8 @@ const AddMemberModal: React.FC<Props> = ({
 
   const valid = useMemo(() => {
     const digits = phone.replace(/\D/g, '');
-    return digits.length >= 7 && !!roleId && countryCode.trim().length > 0;
+    // require exactly 10 digits for phone numbers
+    return digits.length === 10 && !!roleId && countryCode.trim().length > 0;
   }, [phone, roleId, countryCode]);
 
   const reset = useCallback(() => {
@@ -76,12 +77,13 @@ const AddMemberModal: React.FC<Props> = ({
 
   const doSubmit = useCallback(async () => {
     const digits = phone.replace(/\D/g, '');
-    if (digits.length < 7 || !roleId || countryCode.trim().length === 0) return;
+    // enforce exact 10-digit phone number
+    if (digits.length !== 10 || !roleId || countryCode.trim().length === 0) return;
 
     setSubmitting(true);
     setError(null);
     const ok = await onSubmit({
-      phone: phone.trim(),
+      phone: digits, // submit digits-only phone
       countryCode: countryCode.trim(),
       roleId,
     });

@@ -1,5 +1,5 @@
 import { colors } from '@ui/tokens';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -30,6 +30,9 @@ type Props = {
   saving?: boolean;
   errorMessage?: string | null;
   onSave: (payload: UpdateBasicDetailsPayload) => void;
+  // external signal: increment to indicate a successful save and request
+  // that the card exits edit mode
+  savedSignal?: number;
 };
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -148,6 +151,7 @@ export const BasicDetailsCard: React.FC<Props> = ({
   saving,
   errorMessage,
   onSave,
+  savedSignal,
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
@@ -169,6 +173,7 @@ export const BasicDetailsCard: React.FC<Props> = ({
   const cancel = () => setMode('view');
 
   const commit = () => {
+    if (!isDirty) return; // no changes -> noop
     const payload: UpdateBasicDetailsPayload = {
       name: draftName !== name ? draftName : undefined,
       address: {},
@@ -193,6 +198,53 @@ export const BasicDetailsCard: React.FC<Props> = ({
     onSave(payload);
   };
 
+  const isDirty = useMemo(() => {
+    // normalize strings for comparison
+    const eq = (a?: string | null, b?: string | null) =>
+      String(a || '').trim() === String(b || '').trim();
+
+    if (!eq(draftName, name)) return true;
+
+    if (!eq(draftAddress.line1, address.line1)) return true;
+    if (!eq(draftAddress.city, address.city)) return true;
+    if (!eq(draftAddress.state, address.state)) return true;
+    if (!eq(draftAddress.pincode, address.pincode)) return true;
+
+    if (!eq(draftStatuses.propertyOwnership, statuses.propertyOwnership)) return true;
+    if (!eq(draftStatuses.occupancy, statuses.occupancy)) return true;
+    if (!eq(draftStatuses.type, statuses.type)) return true;
+
+    return false;
+  }, [
+    draftName,
+    draftAddress.line1,
+    draftAddress.city,
+    draftAddress.state,
+    draftAddress.pincode,
+    draftStatuses.propertyOwnership,
+    draftStatuses.occupancy,
+    draftStatuses.type,
+    name,
+    address.line1,
+    address.city,
+    address.state,
+    address.pincode,
+    statuses.propertyOwnership,
+    statuses.occupancy,
+    statuses.type,
+  ]);
+
+  // When parent increments savedSignal we assume a successful save happened and
+  // we should exit edit mode. This protects against the card staying in edit
+  // after a remote update.
+  React.useEffect(() => {
+    if (savedSignal && mode === 'edit') {
+      setMode('view');
+    }
+    // only when savedSignal changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedSignal]);
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -212,7 +264,11 @@ export const BasicDetailsCard: React.FC<Props> = ({
             <Pressable style={[styles.btn, styles.ghost]} onPress={cancel}>
               <Text style={[styles.btnText, styles.ghostBtnText]}>Cancel</Text>
             </Pressable>
-            <Pressable style={styles.btn} onPress={commit} disabled={!!saving}>
+            <Pressable
+              style={[styles.btn, (!isDirty || !!saving) && { opacity: 0.5 }]}
+              onPress={commit}
+              disabled={!isDirty || !!saving}
+            >
               <Text style={styles.btnText}>{saving ? 'Saving…' : 'Save'}</Text>
             </Pressable>
           </View>

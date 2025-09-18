@@ -20,7 +20,9 @@ export type ProfileStackParamList = {
   [ROUTES.EDIT_PROFILE]: undefined;
   [ROUTES.ABOUT_ASETTU]: undefined;
 
-  [ROUTES.MANAGE_HOUSEHOLDS]: { removedId?: string; refreshAt?: number } | undefined;
+  [ROUTES.MANAGE_HOUSEHOLDS]:
+    | { removedId?: string; refreshAt?: number; createdId?: string }
+    | undefined;
   [ROUTES.MANAGE_MEMBERS]: undefined;
   [ROUTES.MANAGE_ASSETS]: undefined;
   [ROUTES.MANAGE_SERVICE_REQUESTS]: undefined;

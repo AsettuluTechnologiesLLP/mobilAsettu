@@ -42,6 +42,33 @@ export default function ManageHouseholdsScreen() {
     }
   }, [removedId, navigation, refresh]);
 
+  // If we return from AddHouseholdScreen with { createdId }, refresh and
+  // navigate to the newly created household details. Then clear the param.
+  const createdId = route.params?.createdId;
+  React.useEffect(() => {
+    if (createdId) {
+      // clear param immediately so repeated focus doesn't re-trigger
+      navigation.setParams({ createdId: undefined } as any);
+      // optimistic local refresh from the hook/cache, then navigate
+      refresh()
+        .then(() => {
+          navigation.navigate(ROUTES.MANAGE_HOUSEHOLD_DETAILS, {
+            householdId: createdId,
+            seed: undefined,
+            mode: 'edit',
+          });
+        })
+        .catch(() => {
+          // even if refresh fails, still navigate to details so user can continue
+          navigation.navigate(ROUTES.MANAGE_HOUSEHOLD_DETAILS, {
+            householdId: createdId,
+            seed: undefined,
+            mode: 'edit',
+          });
+        });
+    }
+  }, [createdId, navigation, refresh]);
+
   const goToCreate = () => {
     navigation.navigate(ROUTES.ADD_HOUSEHOLD);
   };
